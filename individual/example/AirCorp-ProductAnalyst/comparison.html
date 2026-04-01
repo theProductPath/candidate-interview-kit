@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Candidate Comparison</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #181d26;
+    --surface: #222831;
+    --card-bg: #2a303c;
+    --accent: #c75c2a;
+    --accent-hover: #a84a20;
+    --accent-subtle: rgba(199,92,42,0.12);
+    --accent-light: #e8865a;
+    --text: #e4eaf4;
+    --muted: #8895aa;
+    --dim: #555f70;
+    --border: #2e3848;
+    --border-strong: #3d4a5c;
+    --green: #22c55e;
+    --green-subtle: rgba(34,197,94,0.12);
+    --yellow: #f59e0b;
+    --yellow-subtle: rgba(245,158,11,0.15);
+    --danger: #dc2626;
+    --danger-subtle: rgba(220,38,38,0.15);
+    --surface-light: #2a303c;
+  }
+  body {
+    font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .header {
+    background: var(--surface);
+    border-bottom: 3px solid var(--accent);
+    padding: 2rem 2.5rem;
+  }
+  .header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .header .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+  }
+  .header .meta {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .container {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 4rem;
+  }
+  .filters {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    background: var(--surface-light);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0.4rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+  }
+  .summary-table thead th {
+    background: var(--surface);
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 2px solid var(--accent);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .summary-table thead th:hover { color: var(--text); }
+  .summary-table thead th .sort-arrow { margin-left: 0.3rem; opacity: 0.4; }
+  .summary-table thead th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+  .summary-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s, box-shadow 0.15s;
+    cursor: pointer;
+  }
+  .summary-table tbody tr:hover { background: rgba(42,48,60,0.6); }
+  .summary-table tbody tr.is-selected {
+    background: rgba(199,92,42,0.12);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  .summary-table tbody tr.is-disabled {
+    cursor: default;
+    opacity: 0.75;
+  }
+  .summary-table tbody td { padding: 0.75rem 1rem; }
+  .candidate-name { font-weight: 600; color: var(--accent-light); }
+  .rec-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .rec-strong-yes { background: var(--green-subtle); color: var(--green); }
+  .rec-yes { background: rgba(34,197,94,0.08); color: #a8e6cf; }
+  .rec-maybe { background: var(--yellow-subtle); color: var(--yellow); }
+  .rec-no { background: var(--danger-subtle); color: #ff928b; }
+  .rec-pending { background: rgba(136,149,170,0.15); color: var(--muted); }
+  .rec-not-started { background: rgba(61,74,92,0.4); color: #aeb8c8; }
+  .score-bar-cell { min-width: 110px; }
+  .score-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .score-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+  }
+  .score-bar-label { font-size: 0.82rem; font-weight: 600; min-width: 2rem; text-align: right; }
+  .selection-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(199,92,42,0.12), rgba(42,48,60,0.45));
+  }
+  .selection-summary strong { color: var(--accent-light); }
+  .selection-summary button {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    padding: 0.45rem 0.75rem;
+    font: inherit;
+    cursor: pointer;
+  }
+  .selection-summary button:hover { border-color: var(--accent); }
+  .viz-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+  .viz-tab {
+    padding: 0.55rem 1.25rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+  }
+  .viz-tab.active { color: var(--accent-light); border-bottom-color: var(--accent); }
+  .radar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  .radar-svg-container { width: 100%; max-width: 540px; min-height: 300px; }
+  .radar-svg-container svg { width: 100%; height: auto; display: block; }
+  .radar-legend {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .radar-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    padding: 0.35rem 0.9rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: all 0.15s;
+    opacity: 0.5;
+  }
+  .radar-legend-item:hover { border-color: var(--border-strong); opacity: 0.8; }
+  .radar-legend-item.active { opacity: 1; }
+  .radar-legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .radar-status-tag {
+    font-size: 0.68rem;
+    color: var(--muted);
+    background: rgba(136,149,170,0.15);
+    border-radius: 3px;
+    padding: 0.1rem 0.4rem;
+    font-weight: 400;
+  }
+  .radar-hint {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+  }
+  .radar-empty {
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    color: var(--muted);
+    width: 100%;
+    background: rgba(42,48,60,0.35);
+  }
+  .card {
+    background: var(--surface-light);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+  .card:hover { border-color: rgba(199,92,42,0.35); }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .card-header h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  .card-header .toggle {
+    color: var(--muted);
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+  }
+  .card-header .toggle.open { transform: rotate(180deg); }
+  .card-header .scores-preview {
+    display: flex;
+    gap: 1.25rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .card-header .scores-preview span strong { color: var(--text); }
+  .card-body {
+    display: none;
+    padding: 0 1.25rem 1.25rem;
+  }
+  .card-body.open { display: block; }
+  .card-section { margin-bottom: 1.25rem; }
+  .card-section h4 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  .card-section p { font-size: 0.88rem; line-height: 1.55; }
+  .score-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .score-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0,0,0,0.2);
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.84rem;
+  }
+  .score-item .dim-name { color: var(--muted); }
+  .score-item .dim-score { font-weight: 700; }
+  .evidence-list { list-style: none; }
+  .evidence-list li {
+    font-size: 0.86rem;
+    padding: 0.35rem 0 0.35rem 1rem;
+    position: relative;
+    line-height: 1.5;
+  }
+  .evidence-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.78rem;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+  .evidence-list.strengths li::before { background: var(--green); }
+  .evidence-list.concerns li::before { background: var(--danger); }
+  .recommendation-box {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    font-size: 0.88rem;
+  }
+  .recommendation-box .rationale { color: var(--muted); }
+  .pending-notice {
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-style: italic;
+    padding: 0 1.25rem 1rem;
+  }
+  .footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.75rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+  }
+  .sc-high { color: var(--green); }
+  .sc-mid { color: var(--yellow); }
+  .sc-low { color: #ff928b; }
+  .sc-muted { color: var(--muted); }
+  @media (max-width: 700px) {
+    .container { padding: 1.25rem; }
+    .score-grid { grid-template-columns: 1fr; }
+    .header { padding: 1.25rem; }
+    .header .meta { flex-direction: column; gap: 0.25rem; }
+    .card-header .scores-preview { display: none; }
+    .selection-summary {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Candidate Comparison</h1>
+  <div class="subtitle" id="subtitle"></div>
+  <div class="meta" id="meta"></div>
+</div>
+
+<div class="container">
+  <div class="filters" id="filters"></div>
+
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th data-col="name">Candidate <span class="sort-arrow">▾</span></th>
+        <th data-col="jd">JD Score <span class="sort-arrow">▾</span></th>
+        <th data-col="qual">Qualitative <span class="sort-arrow">▾</span></th>
+        <th data-col="combined" class="sorted">Combined <span class="sort-arrow">▾</span></th>
+        <th data-col="rec">Recommendation <span class="sort-arrow">▾</span></th>
+      </tr>
+    </thead>
+    <tbody id="summaryBody"></tbody>
+  </table>
+
+  <div class="selection-summary">
+    <div id="selectionSummary"></div>
+    <button type="button" id="selectAllButton">Select All</button>
+  </div>
+
+  <div class="viz-tabs">
+    <div class="viz-tab active">JD Competency Radar</div>
+  </div>
+
+  <div class="radar-wrap">
+    <div class="radar-legend" id="radarLegend"></div>
+    <div class="radar-svg-container" id="radarContainer"></div>
+    <div class="radar-hint">Click a candidate in the legend or summary table to toggle their polygon.</div>
+  </div>
+
+  <div id="cardsContainer"></div>
+
+  <div class="footer">
+    Candidate Interview Kit — theProductPath | Built by Steven Jones
+  </div>
+</div>
+
+<script>
+const appData = {
+  "company": "AirCorp",
+  "role": "Product Analyst — Platform Modernization",
+  "title": "Candidate Comparison - Product Analyst — Platform Modernization | AirCorp",
+  "hiringManager": "Jordan Blake, Engineering Director",
+  "interviewer": "Jordan Blake",
+  "sourceFiles": {
+    "jobDescription": "job-description.md",
+    "interviewerNotes": "interviewer-notes.md"
+  },
+  "generatedAt": "2026-04-01T18:08:27.439Z",
+  "competencyDimensions": [
+    "Requirements Gathering",
+    "Current-State Documentation",
+    "Data Analysis & Synthesis",
+    "Stakeholder Communication",
+    "Platform Migration Experience",
+    "Process Improvement",
+    "Technical Tool Proficiency"
+  ],
+  "counts": {
+    "total": 3,
+    "assessed": 2,
+    "pending": 1,
+    "notStarted": 0
+  },
+  "candidates": [
+    {
+      "slug": "maya-torres",
+      "name": "Maya Torres",
+      "status": "assessed",
+      "rec": "Strong Yes",
+      "recKey": "strong-yes",
+      "recClass": "rec-strong-yes",
+      "snapshot": "Maya Torres is a senior business analyst with 6 years of experience across financial services and SaaS. Her recent work at Meridian Financial involved leading documentation and stakeholder alignment for a core banking platform migration — directly relevant to this role. She combines strong analytical skills with clear written communication, and her resume suggests she's comfortable operating in ambiguous, high-stakes environments.",
+      "jdScore": 4.4,
+      "jdSummary": "Strongest candidate on paper. Migration experience is directly relevant and substantial.",
+      "jdCompetencies": [
+        {
+          "dim": "Requirements Gathering",
+          "score": 5,
+          "evidence": "Led requirements across 12 business units for Meridian core banking migration"
+        },
+        {
+          "dim": "Current-State Documentation",
+          "score": 5,
+          "evidence": "\"Authored 40+ current-state process maps\"; owned documentation workstream"
+        },
+        {
+          "dim": "Data Analysis & Synthesis",
+          "score": 4,
+          "evidence": "SQL proficiency confirmed; led data gap analysis for migration readiness"
+        },
+        {
+          "dim": "Stakeholder Communication",
+          "score": 5,
+          "evidence": "Regular exec-level reporting; managed conflict between IT and operations leads"
+        },
+        {
+          "dim": "Platform Migration Experience",
+          "score": 5,
+          "evidence": "18-month hands-on migration leadership — directly matches role"
+        },
+        {
+          "dim": "Process Improvement",
+          "score": 3,
+          "evidence": "Mentioned process improvement in passing; no specific outcome cited"
+        },
+        {
+          "dim": "Technical Tool Proficiency",
+          "score": 4,
+          "evidence": "SQL, Jira, Confluence, Tableau confirmed"
+        }
+      ],
+      "qualScore": 4.4,
+      "qualDimensions": [
+        {
+          "dim": "Communication & Presence",
+          "score": 5,
+          "evidence": "Crisp, executive-ready — answered questions directly without hedging"
+        },
+        {
+          "dim": "Strategic Thinking",
+          "score": 4,
+          "evidence": "Strong on tactical execution; showed strategic awareness when pressed"
+        },
+        {
+          "dim": "Role Alignment",
+          "score": 5,
+          "evidence": "Described work that maps almost exactly to what we need"
+        },
+        {
+          "dim": "Problem-Solving",
+          "score": 4,
+          "evidence": "Good problem-solving process; slightly methodical — may need to move faster here"
+        },
+        {
+          "dim": "Team & Culture Fit",
+          "score": 4,
+          "evidence": "Collaborative and direct; asked good questions about team dynamics"
+        }
+      ],
+      "overallImpression": "Maya is the strongest candidate interviewed so far. She's precise, self-aware, and clearly experienced — not just adjacent to migration work but leading it. Her answer on the IT/operations conflict was the standout moment: specific, honest about what she got wrong initially, and clear on how she course-corrected. One mild concern: she's used to a slightly larger support structure than we have here.",
+      "strengths": [
+        "Migration leadership is real and substantial — she can describe exactly what she owned",
+        "Handled the conflict question with specificity and honesty; didn't deflect",
+        "Documentation discipline is genuine — she described her process unprompted",
+        "Asked sharp questions about what \"success\" looks like in the first 90 days"
+      ],
+      "concerns": [
+        "Has worked with a dedicated project manager handling logistics; we don't have that — she'll need to self-manage more than she's used to",
+        "Process improvement answer was the weakest — real example but the outcome was incremental, not transformational"
+      ],
+      "notableMoments": [
+        "Unprompted described a mistake she made early in the Meridian migration (underestimated resistance from one business unit) and what she did to recover — exactly the kind of self-awareness we want",
+        "Asked about our current documentation state before I finished explaining the role — shows she's already thinking about the work"
+      ],
+      "rationale": "Maya is the closest match to what this role requires. Her migration experience is directly applicable, her communication style fits our stakeholder environment, and she showed genuine self-awareness in the interview. The self-management concern is minor and manageable. Move to next round.",
+      "briefUpdatedAt": "2026-03-31T02:43:47.092Z",
+      "assessmentUpdatedAt": "2026-03-31T02:43:47.092Z",
+      "combined": 4.4
+    },
+    {
+      "slug": "james-okafor",
+      "name": "James Okafor",
+      "status": "assessed",
+      "rec": "Maybe",
+      "recKey": "maybe",
+      "recClass": "rec-maybe",
+      "snapshot": "James Okafor is a business analyst with 4 years of experience in enterprise software, primarily in ERP implementation and data migration support roles. His background is solid but leans more toward execution support than ownership. He has touched migration work but in a more junior capacity than Maya Torres. Strong documentation skills and technical tool proficiency are evident.",
+      "jdScore": 3.6,
+      "jdSummary": "Solid foundation but questions about ownership and scale.",
+      "jdCompetencies": [
+        {
+          "dim": "Requirements Gathering",
+          "score": 3,
+          "evidence": "Requirements support on ERP implementations; not lead role"
+        },
+        {
+          "dim": "Current-State Documentation",
+          "score": 4,
+          "evidence": "\"Documented AS-IS processes for 3 ERP modules\"; clear ownership"
+        },
+        {
+          "dim": "Data Analysis & Synthesis",
+          "score": 4,
+          "evidence": "SQL, Excel proficiency; data reconciliation work during migrations"
+        },
+        {
+          "dim": "Stakeholder Communication",
+          "score": 3,
+          "evidence": "Mentioned stakeholder updates but no evidence of conflict navigation"
+        },
+        {
+          "dim": "Platform Migration Experience",
+          "score": 3,
+          "evidence": "Participated in two migrations; support role, not leadership"
+        },
+        {
+          "dim": "Process Improvement",
+          "score": 3,
+          "evidence": "Standard continuous improvement language; no specific outcomes"
+        },
+        {
+          "dim": "Technical Tool Proficiency",
+          "score": 5,
+          "evidence": "SQL, Excel, Jira, Confluence, Power BI — strong toolkit"
+        }
+      ],
+      "qualScore": 3.4,
+      "qualDimensions": [
+        {
+          "dim": "Communication & Presence",
+          "score": 4,
+          "evidence": "Clear communicator; professional and easy to talk with"
+        },
+        {
+          "dim": "Strategic Thinking",
+          "score": 3,
+          "evidence": "Tactical focus; struggled when asked to think about the bigger picture"
+        },
+        {
+          "dim": "Role Alignment",
+          "score": 3,
+          "evidence": "Skills match but ownership level doesn't — not yet"
+        },
+        {
+          "dim": "Problem-Solving",
+          "score": 3,
+          "evidence": "Methodical but cautious; escalation-first instinct is a concern"
+        },
+        {
+          "dim": "Team & Culture Fit",
+          "score": 4,
+          "evidence": "Would fit the team well; collaborative and low-ego"
+        }
+      ],
+      "overallImpression": "James is capable and likable but not quite ready for the ownership level this role requires. He's done good work in support roles and his technical skills are genuinely strong, but he struggled to articulate what he personally owned on his migrations — defaulting to \"we\" repeatedly. The ambiguity question was the tell: he described a reasonable process but admitted he prefers to escalate when unclear rather than make a call and move forward.",
+      "strengths": [
+        "Technical skills are excellent — strongest toolkit of candidates interviewed",
+        "Genuinely likable and low-drama; would be easy to work with",
+        "Documentation skills are real and practiced"
+      ],
+      "concerns": [
+        "Ownership language is weak — consistent use of \"we\" without being able to articulate his specific contribution",
+        "Escalation-first problem-solving instinct; this role needs someone who makes calls and moves",
+        "May need more management support than we have capacity to provide"
+      ],
+      "notableMoments": [
+        "When asked what would have been different if he hadn't been there — paused for a long time before answering. The answer was thoughtful but uncertain, which itself was informative."
+      ],
+      "rationale": "James has the skills but not yet the ownership mindset. He might be excellent in 18 months. Right now, this role needs someone who can operate independently from day one. Would consider for a more junior version of this role if one existed. Discuss with team before deciding.",
+      "briefUpdatedAt": "2026-03-31T02:43:47.093Z",
+      "assessmentUpdatedAt": "2026-03-31T02:43:47.093Z",
+      "combined": 3.5
+    },
+    {
+      "slug": "priya-deshmukh",
+      "name": "Priya Deshmukh",
+      "status": "pending",
+      "rec": "Pending",
+      "recKey": "pending",
+      "recClass": "rec-pending",
+      "snapshot": "Priya Deshmukh is an early-career analyst with 2 years of experience in product operations and data analysis at a mid-size tech company. Her resume shows strong analytical instincts and exceptional tool proficiency for her experience level, but limited exposure to enterprise migration work or complex stakeholder environments. She is the youngest and least experienced of the candidates but has indicators of high potential.",
+      "jdScore": 3.1,
+      "jdSummary": "Strong on technical dimensions, significant gaps on experience and scale.",
+      "jdCompetencies": [
+        {
+          "dim": "Requirements Gathering",
+          "score": 2,
+          "evidence": "Limited evidence — product operations work adjacent but not direct"
+        },
+        {
+          "dim": "Current-State Documentation",
+          "score": 3,
+          "evidence": "Documented internal workflows; smaller scale than required"
+        },
+        {
+          "dim": "Data Analysis & Synthesis",
+          "score": 5,
+          "evidence": "\"Built and maintained 12 executive dashboards\"; advanced SQL and Python"
+        },
+        {
+          "dim": "Stakeholder Communication",
+          "score": 2,
+          "evidence": "Internal team communication only; no enterprise stakeholder evidence"
+        },
+        {
+          "dim": "Platform Migration Experience",
+          "score": 1,
+          "evidence": "No evidence of migration work"
+        },
+        {
+          "dim": "Process Improvement",
+          "score": 4,
+          "evidence": "Led 3 documented process improvements with measurable outcomes"
+        },
+        {
+          "dim": "Technical Tool Proficiency",
+          "score": 5,
+          "evidence": "SQL, Python, Tableau, Excel, Jira — strongest technical profile in the pool"
+        }
+      ],
+      "qualScore": null,
+      "qualDimensions": [],
+      "overallImpression": null,
+      "strengths": [],
+      "concerns": [],
+      "notableMoments": [],
+      "rationale": null,
+      "briefUpdatedAt": "2026-03-31T02:43:47.091Z",
+      "assessmentUpdatedAt": null,
+      "combined": null
+    }
+  ]
+};
+const candidates = Array.isArray(appData.candidates) ? appData.candidates.slice() : [];
+const radarCandidates = candidates
+  .filter((candidate) => Array.isArray(candidate.jdCompetencies) && candidate.jdCompetencies.length > 0)
+  .map((candidate, index) => ({
+    name: candidate.name,
+    color: ["#60a5fa", "#34d399", "#f472b6", "#f59e0b", "#a78bfa", "#fb7185"][index % 6],
+    scores: candidate.jdCompetencies.map((entry) => entry.score || 0),
+    status: candidate.status
+  }));
+const radarDims = appData.competencyDimensions || [];
+let radarVisible = radarCandidates.map(() => true);
+let currentFilter = "all";
+let currentSort = { col: "combined", dir: "desc" };
+
+function recommendationRank(label) {
+  return {
+    "Strong Yes": 5,
+    "Yes": 4,
+    "Maybe": 3,
+    "Pending": 2,
+    "Not Started": 1,
+    "No": 0
+  }[label] ?? -1;
+}
+
+function scoreColor(score) {
+  if (score === null || score === undefined) return "sc-muted";
+  if (score >= 4) return "sc-high";
+  if (score >= 3) return "sc-mid";
+  return "sc-low";
+}
+
+function barColor(score) {
+  if (score >= 4) return "var(--green)";
+  if (score >= 3) return "var(--yellow)";
+  return "var(--danger)";
+}
+
+function renderMeta() {
+  document.title = appData.title || "Candidate Comparison";
+  document.getElementById("subtitle").textContent =
+    [appData.role, appData.company].filter(Boolean).join(" | ");
+  document.getElementById("meta").innerHTML = [
+    appData.hiringManager ? `Hiring Manager: ${escapeHtml(appData.hiringManager)}` : null,
+    `Candidates: ${appData.counts.total} (${appData.counts.assessed} assessed, ${appData.counts.pending} pending, ${appData.counts.notStarted} not started)`,
+    `Generated: ${formatDate(appData.generatedAt)}`
+  ].filter(Boolean).map((item) => `<span>${item}</span>`).join("");
+}
+
+function renderFilters() {
+  const filters = [
+    { key: "all", label: "All" },
+    { key: "strong-yes", label: "Strong Yes" },
+    { key: "yes", label: "Yes" },
+    { key: "maybe", label: "Maybe" },
+    { key: "no", label: "No" },
+    { key: "pending", label: "Pending" },
+    { key: "not-started", label: "Not Started" }
+  ];
+  const container = document.getElementById("filters");
+  container.innerHTML = filters.map((filter) => `
+    <button class="filter-btn ${filter.key === currentFilter ? "active" : ""}" data-filter="${filter.key}">
+      ${filter.label}
+    </button>
+  `).join("");
+  container.querySelectorAll(".filter-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      currentFilter = button.dataset.filter;
+      renderFilters();
+      renderTable();
+      renderCards();
+    });
+  });
+}
+
+function sortCandidates() {
+  candidates.sort((left, right) => {
+    const col = currentSort.col;
+    if (col === "name") {
+      return currentSort.dir === "asc"
+        ? left.name.localeCompare(right.name)
+        : right.name.localeCompare(left.name);
+    }
+    if (col === "rec") {
+      return currentSort.dir === "asc"
+        ? recommendationRank(left.rec) - recommendationRank(right.rec)
+        : recommendationRank(right.rec) - recommendationRank(left.rec);
+    }
+    const leftValue = col === "jd" ? left.jdScore : col === "qual" ? left.qualScore : left.combined;
+    const rightValue = col === "jd" ? right.jdScore : col === "qual" ? right.qualScore : right.combined;
+    if (leftValue === null && rightValue === null) return left.name.localeCompare(right.name);
+    if (leftValue === null) return 1;
+    if (rightValue === null) return -1;
+    return currentSort.dir === "asc" ? leftValue - rightValue : rightValue - leftValue;
+  });
+}
+
+function filteredCandidates() {
+  if (currentFilter === "all") return candidates;
+  return candidates.filter((candidate) => candidate.recKey === currentFilter);
+}
+
+function renderTable() {
+  sortCandidates();
+  const tbody = document.getElementById("summaryBody");
+  tbody.innerHTML = "";
+  filteredCandidates().forEach((candidate) => {
+    const radarIndex = getRadarIndexByName(candidate.name);
+    const hasRadar = radarIndex !== -1;
+    const tr = document.createElement("tr");
+    if (hasRadar && radarVisible[radarIndex]) tr.classList.add("is-selected");
+    if (!hasRadar) tr.classList.add("is-disabled");
+    tr.innerHTML = `
+      <td class="candidate-name">${escapeHtml(candidate.name)}</td>
+      <td class="score-bar-cell">${renderScoreBar(candidate.jdScore)}</td>
+      <td class="score-bar-cell">${renderScoreBar(candidate.qualScore)}</td>
+      <td class="score-bar-cell">${renderScoreBar(candidate.combined)}</td>
+      <td><span class="rec-badge ${candidate.recClass}">${escapeHtml(candidate.rec)}</span></td>
+    `;
+    if (hasRadar) {
+      tr.addEventListener("click", () => toggleRadarCandidate(radarIndex));
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+function renderCards() {
+  const container = document.getElementById("cardsContainer");
+  container.innerHTML = "";
+  filteredCandidates().forEach((candidate, index) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    const previewHtml = `
+      <span>JD: <strong class="${scoreColor(candidate.jdScore)}">${formatScore(candidate.jdScore)}</strong></span>
+      <span>Qual: <strong class="${scoreColor(candidate.qualScore)}">${formatScore(candidate.qualScore)}</strong></span>
+      <span>Combined: <strong class="${scoreColor(candidate.combined)}">${formatScore(candidate.combined)}</strong></span>
+    `;
+    card.innerHTML = `
+      <div class="card-header" data-card-index="${index}">
+        <div>
+          <h3>${escapeHtml(candidate.name)} <span class="rec-badge ${candidate.recClass}" style="margin-left:0.5rem;font-size:0.7rem;">${escapeHtml(candidate.rec)}</span></h3>
+        </div>
+        <div style="display:flex;align-items:center;gap:1.5rem;">
+          <div class="scores-preview">${previewHtml}</div>
+          <span class="toggle" id="toggle-${index}">▾</span>
+        </div>
+      </div>
+      <div class="card-body" id="card-body-${index}">
+        ${buildCardBody(candidate)}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+  container.querySelectorAll(".card-header").forEach((header) => {
+    header.addEventListener("click", () => toggleCard(header.dataset.cardIndex));
+  });
+}
+
+function buildCardBody(candidate) {
+  if (candidate.status === "not-started") {
+    return `<div class="pending-notice">Candidate folder exists, but no brief has been generated yet.</div>`;
+  }
+  let html = "";
+  if (candidate.snapshot) {
+    html += `<div class="card-section"><h4>Snapshot</h4><p>${escapeHtml(candidate.snapshot)}</p></div>`;
+  }
+  if (candidate.overallImpression) {
+    html += `<div class="card-section"><h4>Overall Impression</h4><p>${escapeHtml(candidate.overallImpression)}</p></div>`;
+  }
+  if (candidate.jdCompetencies.length) {
+    html += `<div class="card-section"><h4>JD Competency Scores</h4><div class="score-grid">`;
+    candidate.jdCompetencies.forEach((entry) => {
+      html += `<div class="score-item"><span class="dim-name">${escapeHtml(entry.dim)}</span><span class="dim-score ${scoreColor(entry.score)}">${formatScore(entry.score)}/5</span></div>`;
+    });
+    html += `</div></div>`;
+  }
+  if (candidate.qualDimensions.length) {
+    html += `<div class="card-section"><h4>Qualitative Scores</h4><div class="score-grid">`;
+    candidate.qualDimensions.forEach((entry) => {
+      html += `<div class="score-item"><span class="dim-name">${escapeHtml(entry.dim)}</span><span class="dim-score ${scoreColor(entry.score)}">${formatScore(entry.score)}/5</span></div>`;
+    });
+    html += `</div></div>`;
+  }
+  if (candidate.strengths.length) {
+    html += `<div class="card-section"><h4>Top Strengths</h4><ul class="evidence-list strengths">`;
+    candidate.strengths.slice(0, 3).forEach((item) => {
+      html += `<li>${escapeHtml(item)}</li>`;
+    });
+    html += `</ul></div>`;
+  }
+  if (candidate.concerns.length) {
+    html += `<div class="card-section"><h4>Top Concerns</h4><ul class="evidence-list concerns">`;
+    candidate.concerns.slice(0, 2).forEach((item) => {
+      html += `<li>${escapeHtml(item)}</li>`;
+    });
+    html += `</ul></div>`;
+  }
+  if (candidate.status === "pending") {
+    html += `<div class="pending-notice">Brief is ready. Assessment has not been recorded yet.</div>`;
+  }
+  if (candidate.rationale || candidate.rec) {
+    html += `<div class="card-section"><h4>Recommendation</h4><div class="recommendation-box"><span class="rec-badge ${candidate.recClass}">${escapeHtml(candidate.rec)}</span><span class="rationale">${escapeHtml(candidate.rationale || "Assessment not yet complete.")}</span></div></div>`;
+  }
+  return html;
+}
+
+function toggleCard(index) {
+  const body = document.getElementById(`card-body-${index}`);
+  const toggle = document.getElementById(`toggle-${index}`);
+  body.classList.toggle("open");
+  toggle.classList.toggle("open");
+}
+
+function renderScoreBar(score) {
+  if (score === null || score === undefined) {
+    return `<span style="color:var(--muted);font-size:0.82rem;">—</span>`;
+  }
+  const pct = (score / 5) * 100;
+  return `<div class="score-bar-wrap">
+    <div class="score-bar"><div class="score-bar-fill" style="width:${pct}%;background:${barColor(score)}"></div></div>
+    <span class="score-bar-label ${scoreColor(score)}">${formatScore(score)}</span>
+  </div>`;
+}
+
+function getRadarIndexByName(name) {
+  return radarCandidates.findIndex((candidate) => candidate.name === name);
+}
+
+function toggleRadarCandidate(index) {
+  radarVisible[index] = !radarVisible[index];
+  renderRadarLegend();
+  renderRadar();
+  renderSelectionSummary();
+  renderTable();
+}
+
+function selectAllRadar() {
+  radarVisible = radarVisible.map(() => true);
+  renderRadarLegend();
+  renderRadar();
+  renderSelectionSummary();
+  renderTable();
+}
+
+function renderSelectionSummary() {
+  const selected = radarCandidates.filter((candidate, index) => radarVisible[index]).map((candidate) => candidate.name);
+  const el = document.getElementById("selectionSummary");
+  if (!radarCandidates.length) {
+    el.innerHTML = `Radar view will appear once at least one candidate has a completed brief.`;
+    return;
+  }
+  if (selected.length === 0) {
+    el.innerHTML = `Radar view showing <strong>no candidates</strong>. Select a row or legend item to compare.`;
+    return;
+  }
+  if (selected.length === radarCandidates.length) {
+    el.innerHTML = `Radar view showing <strong>all candidates with JD scores</strong>.`;
+    return;
+  }
+  el.innerHTML = `Radar view showing <strong>${escapeHtml(selected.join(", "))}</strong>.`;
+}
+
+function renderRadarLegend() {
+  const el = document.getElementById("radarLegend");
+  if (!radarCandidates.length) {
+    el.innerHTML = "";
+    return;
+  }
+  el.innerHTML = radarCandidates.map((candidate, index) => `
+    <div class="radar-legend-item ${radarVisible[index] ? "active" : ""}" data-radar-index="${index}">
+      <div class="radar-legend-swatch" style="background:${candidate.color}"></div>
+      <span>${escapeHtml(candidate.name)}</span>
+      ${candidate.status !== "assessed" ? `<span class="radar-status-tag">${escapeHtml(candidate.status === "pending" ? "Pending" : "In Progress")}</span>` : ""}
+    </div>
+  `).join("");
+  el.querySelectorAll(".radar-legend-item").forEach((item) => {
+    item.addEventListener("click", () => toggleRadarCandidate(Number(item.dataset.radarIndex)));
+  });
+}
+
+function renderRadar() {
+  const container = document.getElementById("radarContainer");
+  if (!radarCandidates.length || !radarDims.length) {
+    container.innerHTML = `<div class="radar-empty">No JD competency data yet. Generate a brief for at least one candidate to populate the radar chart.</div>`;
+    return;
+  }
+  const W = 540;
+  const H = 520;
+  const cx = W / 2;
+  const cy = (H / 2) + 10;
+  const maxR = 160;
+  const slice = (Math.PI * 2) / radarDims.length;
+  const visibleAny = radarVisible.some(Boolean);
+  if (!visibleAny) {
+    container.innerHTML = `<div class="radar-empty">No candidates selected. Use the table or legend to add polygons back to the chart.</div>`;
+    return;
+  }
+
+  function pointFor(score, dimIndex) {
+    const angle = slice * dimIndex - Math.PI / 2;
+    const radius = (score / 5) * maxR;
+    return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
+  }
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  for (let ring = 1; ring <= 5; ring++) {
+    const radius = (ring / 5) * maxR;
+    let points = "";
+    for (let i = 0; i < radarDims.length; i += 1) {
+      const angle = slice * i - Math.PI / 2;
+      points += `${cx + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)} `;
+    }
+    svg += `<polygon points="${points}" fill="none" stroke="#2e3848" stroke-width="1"/>`;
+    svg += `<text x="${cx + 4}" y="${cy - radius - 5}" font-size="9" fill="#555f70" font-family="Avenir Next, Segoe UI, sans-serif">${ring}</text>`;
+  }
+  for (let i = 0; i < radarDims.length; i += 1) {
+    const angle = slice * i - Math.PI / 2;
+    const ex = cx + maxR * Math.cos(angle);
+    const ey = cy + maxR * Math.sin(angle);
+    svg += `<line x1="${cx}" y1="${cy}" x2="${ex}" y2="${ey}" stroke="#2e3848" stroke-width="1"/>`;
+  }
+  for (let i = 0; i < radarDims.length; i += 1) {
+    const angle = slice * i - Math.PI / 2;
+    const labelRadius = maxR + 28;
+    const lx = cx + labelRadius * Math.cos(angle);
+    const ly = cy + labelRadius * Math.sin(angle);
+    const anchor = Math.cos(angle) > 0.3 ? "start" : Math.cos(angle) < -0.3 ? "end" : "middle";
+    const lines = wrapLabel(radarDims[i], 20);
+    svg += `<text x="${lx}" y="${ly}" text-anchor="${anchor}" font-size="10.5" fill="#8895aa" font-family="Avenir Next, Segoe UI, sans-serif" dominant-baseline="middle">`;
+    lines.forEach((line, index) => {
+      svg += `<tspan x="${lx}" dy="${index === 0 ? (lines.length > 1 ? -6 : 0) : 13}">${escapeHtml(line)}</tspan>`;
+    });
+    svg += `</text>`;
+  }
+  radarCandidates.forEach((candidate, index) => {
+    if (!radarVisible[index]) return;
+    const points = candidate.scores
+      .map((score, dimIndex) => {
+        const point = pointFor(score, dimIndex);
+        return `${point.x},${point.y}`;
+      })
+      .join(" ");
+    const dashed = candidate.status === "assessed" ? "" : `stroke-dasharray="5,3"`;
+    const fillOpacity = candidate.status === "assessed" ? "0.18" : "0.35";
+    svg += `<polygon points="${points}" fill="${candidate.color}" fill-opacity="${fillOpacity}" stroke="${candidate.color}" stroke-width="2" ${dashed}/>`;
+    candidate.scores.forEach((score, dimIndex) => {
+      const point = pointFor(score, dimIndex);
+      svg += `<circle cx="${point.x}" cy="${point.y}" r="3.5" fill="${candidate.color}" stroke="#181d26" stroke-width="1.5"/>`;
+    });
+  });
+  svg += `</svg>`;
+  container.innerHTML = svg;
+}
+
+function wrapLabel(label, maxLen) {
+  const words = String(label).split(" ");
+  const lines = [];
+  let current = "";
+  words.forEach((word) => {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length > maxLen && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  });
+  if (current) lines.push(current);
+  return lines;
+}
+
+function formatDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toISOString().slice(0, 10);
+}
+
+function formatScore(value) {
+  if (value === null || value === undefined) return "—";
+  return Number(value).toFixed(1).replace(/\.0$/, "");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+document.querySelectorAll(".summary-table thead th").forEach((header) => {
+  header.addEventListener("click", () => {
+    const col = header.dataset.col;
+    let dir = "desc";
+    if (currentSort.col === col && currentSort.dir === "desc") dir = "asc";
+    currentSort = { col, dir };
+    document.querySelectorAll(".summary-table thead th").forEach((th) => {
+      th.classList.remove("sorted");
+      const arrow = th.querySelector(".sort-arrow");
+      if (arrow) arrow.textContent = "▾";
+    });
+    header.classList.add("sorted");
+    header.querySelector(".sort-arrow").textContent = dir === "desc" ? "▾" : "▴";
+    renderTable();
+    renderCards();
+  });
+});
+
+document.getElementById("selectAllButton").addEventListener("click", selectAllRadar);
+
+renderMeta();
+renderFilters();
+renderTable();
+renderCards();
+renderRadarLegend();
+renderRadar();
+renderSelectionSummary();
+</script>
+</body>
+</html>
