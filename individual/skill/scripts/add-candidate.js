@@ -2,6 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { execFileSync } = require("child_process");
 const { slugifyCandidateName } = require("./kit-data");
 
 const args = process.argv.slice(2);
@@ -26,3 +27,20 @@ if (!fs.existsSync(candidateDir)) {
 }
 
 console.log(`Candidate folder ready at ${candidateDir}`);
+
+try {
+  const refreshScript = path.join(__dirname, "refresh-comparison.js");
+  const output = execFileSync(process.execPath, [refreshScript], {
+    cwd: kitRoot,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
+  if (output) {
+    console.log(output);
+  }
+} catch (error) {
+  const stderr = error.stderr ? String(error.stderr).trim() : "";
+  const stdout = error.stdout ? String(error.stdout).trim() : "";
+  const detail = stderr || stdout;
+  console.warn(detail ? `Comparison refresh skipped: ${detail}` : "Comparison refresh skipped.");
+}

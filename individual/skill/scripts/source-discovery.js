@@ -1,9 +1,11 @@
 const fs = require("fs");
 const path = require("path");
+const { execFileSync } = require("child_process");
 
 const TEXT_EXTENSIONS = new Set([".md", ".markdown", ".txt"]);
 const DOC_EXTENSIONS = new Set([".pdf", ".docx", ".doc", ".rtf"]);
 const SUPPORTED_EXTENSIONS = new Set([...TEXT_EXTENSIONS, ...DOC_EXTENSIONS]);
+const PLACEHOLDER_NOTES_FILES = new Set(["interviewer-notes-optional.txt"]);
 
 const JOB_DESCRIPTION_BASENAMES = [
   "job-description",
@@ -40,7 +42,11 @@ function discoverSources(kitRoot) {
 
   return {
     jobDescription: pickSource(files, JOB_DESCRIPTION_BASENAMES, ["job", "description", "jd"]),
-    interviewerNotes: pickSource(files, INTERVIEWER_NOTES_BASENAMES, ["interviewer", "notes", "focus"]),
+    interviewerNotes: pickSource(
+      files.filter((file) => !PLACEHOLDER_NOTES_FILES.has(file.name.toLowerCase())),
+      INTERVIEWER_NOTES_BASENAMES,
+      ["interviewer", "notes", "focus"]
+    ),
   };
 }
 
@@ -57,8 +63,16 @@ function pickSource(files, preferredBasenames, fallbackTerms) {
 
 function readTextSource(source) {
   if (!source) return null;
-  if (!TEXT_EXTENSIONS.has(source.ext)) return null;
-  return fs.readFileSync(source.fullPath, "utf8");
+  if (TEXT_EXTENSIONS.has(source.ext)) {
+    return fs.readFileSync(source.fullPath, "utf8");
+  }
+  if (source.ext === ".pdf") {
+    return runExtractor("/opt/homebrew/bin/pdftotext", ["-layout", source.fullPath, "-"]);
+  }
+  if (source.ext === ".docx" || source.ext === ".doc" || source.ext === ".rtf") {
+    return runExtractor("/usr/bin/textutil", ["-convert", "txt", "-stdout", source.fullPath]);
+  }
+  return null;
 }
 
 function validateKitPrereqs(kitRoot) {
@@ -86,3 +100,14 @@ module.exports = {
   readTextSource,
   validateKitPrereqs,
 };
+
+function runExtractor(command, args) {
+  try {
+    return execFileSync(command, args, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return null;
+  }
+}

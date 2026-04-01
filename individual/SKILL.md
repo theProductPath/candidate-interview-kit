@@ -50,7 +50,10 @@ skill/
 │   └── comparison-template.html
 └── scripts/
     ├── add-candidate.js
+    ├── init-kit.js
     ├── kit-data.js
+    ├── rename-candidate.js
+    ├── source-discovery.js
     └── refresh-comparison.js
 ```
 
@@ -63,6 +66,7 @@ Use the bundled template as the canonical comparison UI. Do not redesign the app
 **If the user gives an explicit command:**
 - "Initialize" or "Setup" → go to Setup
 - "Add candidate: [name]" → go to Setup Step 0
+- "Rename candidate: [old] -> [new]" → go to Setup Step 0b
 - "New candidate: [name]" or "Generate prep brief for [name]" → go to Step 1
 - "Post-interview: [name]" or "Record assessment for [name]" → go to Step 2
 - "Update comparison", "Refresh comparison", or "Generate comparison" → go to Step 3
@@ -135,6 +139,7 @@ Accepted formats:
 - `.rtf`
 
 If no interviewer notes file is present, continue with a warning rather than failing.
+Ignore the scaffold placeholder file `INTERVIEWER-NOTES-OPTIONAL.txt` unless the user replaces it with a real notes file.
 
 ### Setup Step 0 — Add Candidate
 
@@ -144,12 +149,23 @@ If no interviewer notes file is present, continue with a warning rather than fai
 - Run `node skill/scripts/add-candidate.js "[Candidate Name]"` from the kit root
 - This creates `candidates/{candidate-slug}/` if it does not already exist
 - If the user has also provided a resume, place it in that folder as `resume.pdf`
-- Refresh the comparison tool after creating the candidate folder so the placeholder state appears in `comparison.html`
+- The script should attempt to refresh the comparison tool automatically so the placeholder state appears in `comparison.html`
+- If a job description is not present yet, the refresh may be skipped with a warning
 
 **Expected behavior in the comparison tool:**
 - Folder only → show candidate as `Not Started`
 - `brief.md` exists, no `assessment.md` → show candidate as `Pending`
 - `assessment.md` exists → show recommendation and combined score
+
+### Setup Step 0b — Rename Candidate
+
+**Trigger:** "Rename candidate: [old] -> [new]"
+
+**Action:**
+- Run `node skill/scripts/rename-candidate.js "[Old Name]" "[New Name]"`
+- This renames the candidate folder slug
+- If `brief.md` or `assessment.md` exists, update the title line to the new candidate name
+- Refresh the comparison tool automatically
 
 ---
 
@@ -302,6 +318,7 @@ node skill/scripts/refresh-comparison.js
 ```
 
 Treat the markdown files as the source of truth. A full rebuild is preferred over timestamp-only incremental patching because it is simpler and more reliable.
+When the JD source does not yield `Key Competencies`, derive radar axes from candidate `jdCompetencies` so the chart still renders.
 
 ### Comparison Tool Requirements
 
@@ -332,15 +349,15 @@ The HTML file must be fully self-contained — all CSS and JavaScript inline, no
      let svg = `<svg width="${w}" height="${h}" style="overflow:visible;">`;
      // Grid circles
      for (let i = 1; i <= 5; i++) {
-       svg += `<circle cx="${cx}" cy="${cy}" r="${r(i)}" fill="none" stroke="#2e3848" stroke-width="1"/>`;
+       svg += `<circle cx="${cx}" cy="${cy}" r="${r(i)}" fill="none" stroke="#d1cdc6" stroke-width="0.75"/>`;
      }
      // Axis lines and labels
      dimensions.forEach((dim, i) => {
        const a = slice * i - Math.PI / 2;
        const x = cx + maxR * Math.cos(a), y = cy + maxR * Math.sin(a);
-       svg += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#2e3848" stroke-width="1"/>`;
+       svg += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#d1cdc6" stroke-width="0.75"/>`;
        const lx = cx + (maxR + 28) * Math.cos(a), ly = cy + (maxR + 28) * Math.sin(a);
-       svg += `<text x="${lx}" y="${ly}" text-anchor="middle" dy="0.3em" font-size="11" fill="#8895aa">${dim}</text>`;
+       svg += `<text x="${lx}" y="${ly}" text-anchor="middle" dy="0.3em" font-size="11" fill="#6b7280">${dim}</text>`;
      });
      // Candidate polygons
      selectedCandidates.forEach(candidate => {
@@ -376,18 +393,46 @@ The HTML file must be fully self-contained — all CSS and JavaScript inline, no
 - If new candidates are added, the next refresh should include them automatically
 - The template in `skill/assets/comparison-template.html` is the canonical UI and should stay visually consistent across kits
 
-4. **Design:** Use the tPP design system (The Sibling)
-   - Background: `#181d26`
-   - Surface: `#222831`
-   - Card background: `#2a303c`
-   - Border: `#2e3848`
-   - Accent (primary action): `#c75c2a` (burnt orange)
-   - Accent light: `#e8865a`
+4. **Design:** Use the tPP design system (The Sibling + Document Layer)
+
+   **Header/Chrome (dark — The Sibling):**
+   - Background: `#222831` (gradient to `rgba(42,48,60,0.8)`)
+   - Accent bar: `#c75c2a` (burnt orange, 3px bottom border)
    - Text: `#e4eaf4`
    - Muted: `#8895aa`
-   - Font: `'Inter', 'Segoe UI', system-ui, sans-serif`
-   - Semantic: green `#22c55e` (strengths/high), amber `#f59e0b` (mid/maybe), red `#dc2626` (concerns/low/no)
-   - Candidate colors (for radar polygons): use distinct, accessible colors — e.g., `#60a5fa` (blue), `#34d399` (green), `#f472b6` (pink), `#a78bfa` (purple)
+
+   **Content area (light — Document Layer):**
+   The entire `.container` below the header uses the Document Layer for readability.
+   - Page background: `#f0ede8` (warm parchment)
+   - Card/surface: `#ffffff`
+   - Card border: `#e5e2dd`
+   - Text body: `#374151`
+   - Text muted: `#6b7280`
+   - Text heading: `#1f2937`
+   - Score item bg: `#f9f7f4`
+   - Table row striping: `#faf8f5` (even rows)
+   - Table hover: `#f5f3ef`
+
+   **Shared tokens:**
+   - Accent (primary action): `#c75c2a` (burnt orange)
+   - Accent light: `#e8865a`
+   - Font: `'Inter', 'Segoe UI', system-ui, sans-serif` (load via Google Fonts)
+   - Border radius: `8px` (cards), `4px` (buttons/badges)
+
+   **Semantic colors (light-mode adjusted):**
+   - Green: `#16a34a` (strengths/high), subtle: `rgba(22,163,74,0.1)`
+   - Amber: `#d97706` (mid/maybe), subtle: `rgba(217,119,6,0.1)`
+   - Red: `#dc2626` (concerns/low/no), subtle: `rgba(220,38,38,0.08)`
+
+   **Radar chart (on parchment background):**
+   - Grid lines: `#d1cdc6`
+   - Axis labels: `#6b7280`
+   - Ring labels: `#9ca3af`
+   - Dot strokes: `#f0ede8` (match page bg)
+   - Polygon fill opacity: `0.25` (assessed), `0.15` (pending)
+   - Candidate colors: `#3b82f6` (blue), `#10b981` (green), `#ec4899` (pink), `#d97706` (amber), `#8b5cf6` (purple), `#e11d48` (rose)
+
+   **Rule:** Dark app chrome (The Sibling) stays dark. Readable content shifts to warm white document register (Document Layer). Accent orange carries through both modes.
 
 5. **Interactions:**
    - Click candidate row to toggle them on/off in the radar chart

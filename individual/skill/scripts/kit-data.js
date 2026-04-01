@@ -15,17 +15,27 @@ function slugifyCandidateName(name) {
 }
 
 function extractLabeledValue(markdown, label) {
-  const pattern = new RegExp(`\\*\\*${escapeRegex(label)}:\\*\\*\\s*(.+)`);
+  const pattern = new RegExp(
+    `(?:\\*\\*)?${escapeRegex(label)}(?:\\*\\*)?\\s*:\\s*(.+)`,
+    "i"
+  );
   const match = markdown.match(pattern);
   return match ? match[1].trim() : null;
 }
 
 function extractSection(markdown, heading) {
-  const pattern = new RegExp(
-    `##\\s+${escapeRegex(heading)}\\s*\\n([\\s\\S]*?)(?=\\n##\\s+|\\s*$)`
-  );
-  const match = markdown.match(pattern);
-  return match ? match[1].trim() : null;
+  const patterns = [
+    new RegExp(`##\\s+${escapeRegex(heading)}\\s*\\n([\\s\\S]*?)(?=\\n##\\s+|\\s*$)`, "i"),
+    new RegExp(
+      `${escapeRegex(heading)}\\s*\\n([\\s\\S]*?)(?=\\n[A-Z][A-Za-z\\s&/-]{2,}:?\\s*\\n|\\s*$)`,
+      "i"
+    ),
+  ];
+  for (const pattern of patterns) {
+    const match = markdown.match(pattern);
+    if (match) return match[1].trim();
+  }
+  return null;
 }
 
 function extractFirstParagraph(sectionText) {
@@ -101,14 +111,14 @@ function parseBrief(markdown) {
   }));
 
   const overallMatch = markdown.match(
-    /\*\*Overall JD Match:\s*([0-9.]+)\/5\*\*\s*[—-]\s*(.+)/
+    /(?:\*\*)?Overall JD Match(?::|\*\*:?)\s*(?:\*\*)?\s*([0-9.]+)\/5(?:\*\*)?\s*[—-]?\s*(.*)/i
   );
 
   return {
     snapshot: extractFirstParagraph(snapshotSection),
     jdCompetencies: competencies,
     jdScore: overallMatch ? Number(overallMatch[1]) : null,
-    jdSummary: overallMatch ? overallMatch[2].trim() : null,
+    jdSummary: overallMatch && overallMatch[2] ? overallMatch[2].trim() || null : null,
   };
 }
 
@@ -127,7 +137,9 @@ function parseAssessment(markdown) {
     score: parseScoreValue(cells[1]),
     evidence: cells[2],
   }));
-  const overallMatch = markdown.match(/\*\*Overall Qualitative Score:\s*([0-9.]+)\/5\*\*/);
+  const overallMatch = markdown.match(
+    /(?:\*\*)?Overall Qualitative Score(?::|\*\*:?)\s*(?:\*\*)?\s*([0-9.]+)\/5(?:\*\*)?/i
+  );
   const recommendation = parseRecommendation(recommendationSection);
 
   return {
@@ -247,6 +259,10 @@ function buildKitData(kitRoot) {
 
   const candidates = candidateDirs.map(buildCandidateRecord);
   candidates.sort(compareCandidates);
+  const fallbackCompetencyDimensions =
+    competencyDimensions.length > 0
+      ? competencyDimensions
+      : deriveCompetencyDimensionsFromCandidates(candidates);
 
   const counts = {
     total: candidates.length,
@@ -266,7 +282,7 @@ function buildKitData(kitRoot) {
       interviewerNotes: sources.interviewerNotes ? path.basename(sources.interviewerNotes.fullPath) : null,
     },
     generatedAt: new Date().toISOString(),
-    competencyDimensions,
+    competencyDimensions: fallbackCompetencyDimensions,
     counts,
     candidates,
   };
@@ -306,6 +322,20 @@ function normalizeRecommendationKey(label) {
 
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function deriveCompetencyDimensionsFromCandidates(candidates) {
+  const seen = new Set();
+  const ordered = [];
+  candidates.forEach((candidate) => {
+    candidate.jdCompetencies.forEach((entry) => {
+      const normalized = entry.dim.trim().toLowerCase();
+      if (!normalized || seen.has(normalized)) return;
+      seen.add(normalized);
+      ordered.push(entry.dim);
+    });
+  });
+  return ordered;
 }
 
 module.exports = {
