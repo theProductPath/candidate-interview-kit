@@ -5,6 +5,5 @@
 __pycache__/
 *.pyc
 
-# Generated outputs
-comparison.html
+# Artifacts
 comparison-save.html
