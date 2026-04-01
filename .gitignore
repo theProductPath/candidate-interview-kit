@@ -1,0 +1,10 @@
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Generated outputs
+comparison.html
+comparison-save.html
