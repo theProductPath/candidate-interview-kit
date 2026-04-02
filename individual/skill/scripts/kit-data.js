@@ -359,23 +359,22 @@ function deriveDisplayRoleTitle(jdMarkdown, fallbackRole) {
   const headingMatch = jdMarkdown.match(/^#\s*Job Description\s*[—-]\s*(.+)$/im);
   if (headingMatch) return stripTrailingReq(headingMatch[1].trim());
 
-  const firstMeaningfulLine = jdMarkdown
+  const normalizedLines = jdMarkdown
     .split("\n")
     .map((line) => line.replace(/^#+\s*/, "").trim())
-    .find((line) => {
-      const lower = line.toLowerCase();
-      return (
-        line &&
-        !lower.startsWith("job description") &&
-        !lower.startsWith("company:") &&
-        !lower.startsWith("role:") &&
-        !lower.startsWith("hiring manager:") &&
-        !lower.startsWith("posted:") &&
-        !lower.startsWith("about the role")
-      );
-    });
+    .filter(Boolean);
 
-  return stripTrailingReq(firstMeaningfulLine || fallbackRole || "Open Role");
+  const scoredCandidates = normalizedLines
+    .map((line, index) => ({
+      line,
+      score: scorePotentialRoleTitle(line, index, normalizedLines),
+    }))
+    .filter((candidate) => candidate.score > 0)
+    .sort((left, right) => right.score - left.score);
+
+  return stripTrailingReq(
+    (scoredCandidates[0] && scoredCandidates[0].line) || fallbackRole || "Open Role"
+  );
 }
 
 function inferReqId(jdMarkdown) {
@@ -402,6 +401,69 @@ function cleanExtractedValue(value) {
     .replace(/\s*\*+$/, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function scorePotentialRoleTitle(line, index, allLines) {
+  const cleaned = cleanExtractedValue(line);
+  const lower = cleaned.toLowerCase();
+
+  if (!cleaned) return 0;
+  if (cleaned.length < 4 || cleaned.length > 90) return 0;
+  if (looksLikeNoiseLine(lower)) return 0;
+
+  let score = 0;
+
+  if (/\b(manager|analyst|engineer|designer|director|coordinator|specialist|administrator|developer|architect|lead|partner|officer|consultant|recruiter|associate|president|supervisor|technician)\b/i.test(cleaned)) {
+    score += 8;
+  }
+  if (/^[A-Z][A-Za-z0-9/&(),.+\- ]+$/.test(cleaned)) {
+    score += 3;
+  }
+  if (/\bfull time\b|\bpart time\b|\bcontract\b|\bremote\b|\bhybrid\b/i.test((allLines[index + 1] || "").toLowerCase())) {
+    score += 6;
+  }
+  if (/\brequisition id\b|\breq(?:uisition)?\b|\bjob id\b/i.test((allLines[index + 1] || "").toLowerCase()) ||
+      /\brequisition id\b|\breq(?:uisition)?\b|\bjob id\b/i.test((allLines[index + 2] || "").toLowerCase())) {
+    score += 5;
+  }
+  if (index <= 2) {
+    score -= 2;
+  }
+  if (/\|/.test(cleaned)) {
+    score -= 4;
+  }
+  if (/\d{1,2}\/\d{1,2}\/\d{2,4}/.test(cleaned)) {
+    score -= 8;
+  }
+  if (/\d/.test(cleaned) && !/\b(?:ii|iii|iv)\b/i.test(cleaned)) {
+    score -= 2;
+  }
+
+  return score;
+}
+
+function looksLikeNoiseLine(lower) {
+  return (
+    lower.startsWith("job description") ||
+    lower.startsWith("company:") ||
+    lower.startsWith("role:") ||
+    lower.startsWith("hiring manager:") ||
+    lower.startsWith("posted:") ||
+    lower.startsWith("about the role") ||
+    lower.includes("career center") ||
+    lower.includes("recruitment") ||
+    lower.includes("join our talent community") ||
+    lower.includes("share") ||
+    lower.includes("accommodation") ||
+    lower.includes("application process") ||
+    lower.includes("30+ days ago") ||
+    lower.includes("full time") ||
+    lower.includes("part time") ||
+    lower.includes("glen ellyn") ||
+    /\brequisition id\b/.test(lower) ||
+    /\bjob id\b/.test(lower) ||
+    /^\d{1,2}\/\d{1,2}\/\d{2,4}/.test(lower)
+  );
 }
 
 module.exports = {

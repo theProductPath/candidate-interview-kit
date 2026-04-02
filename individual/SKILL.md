@@ -90,6 +90,7 @@ Scan the folder and determine state:
 - If the user provides post-interview notes, a transcript, a markdown/text file, or verbal feedback for a candidate, treat that as a direct instruction to generate the assessment.
 - Do not ask whether they also want an assessment unless the candidate identity is unclear or the notes are too incomplete to proceed.
 - After creating `brief.md` or `assessment.md`, always give the user a compact preview in chat so they can review the result immediately.
+- Do not stop at "the file is ready" plus a link. The in-chat preview is required unless the user explicitly asks for link-only behavior.
 - If your environment supports opening or previewing files, offer that as an optional next step after the in-chat summary.
 
 ---
@@ -232,6 +233,7 @@ Then give the user a short preview in chat:
 - candidate snapshot
 - overall JD match
 - 2-3 highest-value probe areas or suggested questions
+- The preview should quote or paraphrase enough detail that the user can evaluate the brief without opening the file immediately.
 
 Then refresh the comparison tool by running `node skill/scripts/refresh-comparison.js`.
 
@@ -298,6 +300,7 @@ Then give the user a short preview in chat:
 - recommendation
 - top strengths
 - top concerns
+- The preview should include enough signal that the user can react to the assessment without opening the file immediately.
 
 Then refresh the comparison tool by running `node skill/scripts/refresh-comparison.js`.
 
