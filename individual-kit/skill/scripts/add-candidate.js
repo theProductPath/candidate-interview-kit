@@ -9,7 +9,7 @@ const args = process.argv.slice(2);
 const name = args.join(" ").trim();
 
 if (!name) {
-  console.error("Usage: node individual/skill/scripts/add-candidate.js \"Candidate Name\"");
+  console.error("Usage: node individual-kit/skill/scripts/add-candidate.js \"Candidate Name\"");
   process.exit(1);
 }
 

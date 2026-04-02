@@ -75,7 +75,7 @@ The kit runs through three steps, in order, for each candidate:
 ```
 Candidate-Interview-Kit/
 ├── README.md                   ← This file
-├── individual/
+├── individual-kit/
 │   ├── SKILL.md                ← The AI skill (copy this to your kit folder)
 │   ├── skill/                  ← Supporting skill files (copy this too)
 │   └── example/                ← Working example (AirCorp — Product Analyst)
@@ -91,8 +91,8 @@ Candidate-Interview-Kit/
 ## Getting Started
 
 1. Download or clone this repo
-2. Start a session in your preferred LLM tool with `individual/` as the working directory
-3. Point the chat at that `individual/` folder
+2. Start a session in your preferred LLM tool with `individual-kit/` as the working directory
+3. Point the chat at that `individual-kit/` folder
 4. Type `initialize`
 5. Let the LLM scaffold a fresh working kit for the role you are hiring for
 6. Add a job description file to that new kit
@@ -117,7 +117,7 @@ The skill handles the rest.
 - The scaffold placeholder `INTERVIEWER-NOTES-OPTIONAL.txt` is not treated as real interviewer notes.
 - `add-candidate.js` will try to refresh `comparison.html` automatically after creating the folder.
 - If a candidate name is entered incorrectly, use `node skill/scripts/rename-candidate.js "Old Name" "New Name"`.
-- When you later add a `team/` edition, users should start from that folder the same way they start from `individual/` now.
+- When you later add a `team-kit/` edition, users should start from that folder the same way they start from `individual-kit/` now.
 
 ---
 

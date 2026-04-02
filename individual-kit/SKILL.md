@@ -86,7 +86,7 @@ Scan the folder and determine state:
 
 ## Interaction Defaults
 
-- Assume the user starts from the `individual/` folder when using this mode.
+- Assume the user starts from the `individual-kit/` folder when using this mode.
 - If the user provides post-interview notes, a transcript, a markdown/text file, or verbal feedback for a candidate, treat that as a direct instruction to generate the assessment.
 - Do not ask whether they also want an assessment unless the candidate identity is unclear or the notes are too incomplete to proceed.
 - After creating `brief.md` or `assessment.md`, always give the user a compact preview in chat so they can review the result immediately.
@@ -99,7 +99,7 @@ Scan the folder and determine state:
 
 When the user asks to set up a new kit:
 
-1. Assume the user started their session from the `individual/` folder in this repo or from a copied individual-kit folder.
+1. Assume the user started their session from the `individual-kit/` folder in this repo or from a copied individual-kit folder.
 2. Initialize the current folder by running:
 
 ```bash
