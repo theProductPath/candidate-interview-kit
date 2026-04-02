@@ -20,7 +20,7 @@ function extractLabeledValue(markdown, label) {
     "i"
   );
   const match = markdown.match(pattern);
-  return match ? match[1].trim() : null;
+  return match ? cleanExtractedValue(match[1]) : null;
 }
 
 function extractSection(markdown, heading) {
@@ -239,6 +239,14 @@ function buildKitData(kitRoot) {
     extractLabeledValue(notesMarkdown, "Hiring Manager") ||
     "";
   const interviewer = extractLabeledValue(notesMarkdown, "Interviewer") || "";
+  const reqId =
+    extractLabeledValue(jdMarkdown, "Req ID") ||
+    extractLabeledValue(jdMarkdown, "Req") ||
+    extractLabeledValue(jdMarkdown, "Requisition ID") ||
+    extractLabeledValue(jdMarkdown, "Requisition") ||
+    inferReqId(jdMarkdown);
+  const displayRoleTitle = deriveDisplayRoleTitle(jdMarkdown, role);
+  const comparisonHeading = buildComparisonHeading(displayRoleTitle, reqId);
 
   const competencySection = extractSection(jdMarkdown, "Key Competencies");
   const competencyDimensions = competencySection
@@ -274,7 +282,9 @@ function buildKitData(kitRoot) {
   return {
     company,
     role,
-    title: `Candidate Comparison${role ? ` - ${role}` : ""}${company ? ` | ${company}` : ""}`,
+    title: comparisonHeading,
+    displayRoleTitle,
+    reqId,
     hiringManager,
     interviewer,
     sourceFiles: {
@@ -336,6 +346,62 @@ function deriveCompetencyDimensionsFromCandidates(candidates) {
     });
   });
   return ordered;
+}
+
+function deriveDisplayRoleTitle(jdMarkdown, fallbackRole) {
+  const labeledTitle =
+    extractLabeledValue(jdMarkdown, "Job Title") ||
+    extractLabeledValue(jdMarkdown, "Title") ||
+    extractLabeledValue(jdMarkdown, "Position Title") ||
+    extractLabeledValue(jdMarkdown, "Position");
+  if (labeledTitle) return stripTrailingReq(labeledTitle);
+
+  const headingMatch = jdMarkdown.match(/^#\s*Job Description\s*[—-]\s*(.+)$/im);
+  if (headingMatch) return stripTrailingReq(headingMatch[1].trim());
+
+  const firstMeaningfulLine = jdMarkdown
+    .split("\n")
+    .map((line) => line.replace(/^#+\s*/, "").trim())
+    .find((line) => {
+      const lower = line.toLowerCase();
+      return (
+        line &&
+        !lower.startsWith("job description") &&
+        !lower.startsWith("company:") &&
+        !lower.startsWith("role:") &&
+        !lower.startsWith("hiring manager:") &&
+        !lower.startsWith("posted:") &&
+        !lower.startsWith("about the role")
+      );
+    });
+
+  return stripTrailingReq(firstMeaningfulLine || fallbackRole || "Open Role");
+}
+
+function inferReqId(jdMarkdown) {
+  const lineMatch = jdMarkdown.match(
+    /\b(?:req(?:uisition)?(?:\s+id)?|job\s+id)\b[\s:#-]*([a-z0-9-]+)/i
+  );
+  return lineMatch ? lineMatch[1].trim() : null;
+}
+
+function buildComparisonHeading(displayRoleTitle, reqId) {
+  const reqSegment = reqId ? ` (Req ${reqId})` : "";
+  return `${displayRoleTitle || "Open Role"}${reqSegment} — Candidate Comparison`;
+}
+
+function stripTrailingReq(value) {
+  return String(value || "")
+    .replace(/\s*\((?:req(?:uisition)?(?:\s+id)?|job\s+id)[^)]+\)\s*$/i, "")
+    .trim();
+}
+
+function cleanExtractedValue(value) {
+  return String(value || "")
+    .replace(/^\*+\s*/, "")
+    .replace(/\s*\*+$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 module.exports = {

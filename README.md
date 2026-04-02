@@ -90,12 +90,21 @@ Candidate-Interview-Kit/
 
 ## Getting Started
 
-1. Download this repo into a new local folder for a hiring loop
-2. Run `node individual/skill/scripts/init-kit.js .`
-3. Add a job description file to the kit root
-4. Optionally add interviewer notes or focus areas to the kit root
-5. Add candidates with `node skill/scripts/add-candidate.js "Candidate Name"` or by asking your LLM to do it
-6. Refresh the comparison tool with `node skill/scripts/refresh-comparison.js`
+1. Download or clone this repo
+2. Start a session in your preferred LLM tool with `individual/` as the working directory
+3. Point the chat at that `individual/` folder
+4. Type `initialize`
+5. Let the LLM scaffold a fresh working kit for the role you are hiring for
+6. Add a job description file to that new kit
+7. Optionally add interviewer notes or focus areas
+8. Add candidates and continue the interview workflow
+
+If you prefer scripts directly, the equivalent initializer is:
+
+```bash
+cd individual
+node skill/scripts/init-kit.js /path/to/new-kit-folder
+```
 
 The skill handles the rest.
 
@@ -105,6 +114,10 @@ The skill handles the rest.
 - Accepted JD examples: `job-description.md`, `jd.pdf`, `role-description.docx`
 - Interviewer notes are optional.
 - Accepted notes examples: `interviewer-notes.md`, `hiring-manager-notes.pdf`, `focus-areas.txt`
+- The scaffold placeholder `INTERVIEWER-NOTES-OPTIONAL.txt` is not treated as real interviewer notes.
+- `add-candidate.js` will try to refresh `comparison.html` automatically after creating the folder.
+- If a candidate name is entered incorrectly, use `node skill/scripts/rename-candidate.js "Old Name" "New Name"`.
+- When you later add a `team/` edition, users should start from that folder the same way they start from `individual/` now.
 
 ---
 

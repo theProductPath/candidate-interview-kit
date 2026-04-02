@@ -396,6 +396,107 @@
     font-style: italic;
     padding: 0 1.25rem 1rem;
   }
+  .matrix-section {
+    margin-top: 2.25rem;
+  }
+  .matrix-section h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--doc-text-heading);
+    margin-bottom: 0.35rem;
+  }
+  .matrix-section .section-kicker {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--doc-text-muted);
+    margin-bottom: 1rem;
+    font-weight: 700;
+  }
+  .matrix-card {
+    background: var(--doc-bg);
+    border: 1px solid var(--doc-border);
+    border-radius: var(--radius);
+    box-shadow: var(--doc-shadow-sm);
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .matrix-table thead th {
+    background: #f7f4ef;
+    color: var(--doc-text-muted);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.85rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--doc-border);
+  }
+  .matrix-table thead th.candidate-th {
+    text-align: center;
+  }
+  .matrix-table tbody td {
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid var(--doc-border);
+    vertical-align: top;
+  }
+  .matrix-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .matrix-dimension {
+    min-width: 220px;
+  }
+  .matrix-dimension strong {
+    display: block;
+    color: var(--doc-text-heading);
+    font-size: 0.95rem;
+  }
+  .matrix-dimension .matrix-subtext {
+    margin-top: 0.3rem;
+    color: var(--doc-text-muted);
+    font-size: 0.78rem;
+  }
+  .matrix-cell {
+    min-width: 150px;
+    text-align: center;
+  }
+  .matrix-score {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.3rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 7px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+  .matrix-score.high { background: var(--doc-green-subtle); color: var(--doc-green); }
+  .matrix-score.mid { background: var(--doc-yellow-subtle); color: var(--doc-yellow); }
+  .matrix-score.low { background: var(--doc-danger-subtle); color: var(--doc-danger); }
+  .matrix-score.empty { background: rgba(107,114,128,0.08); color: var(--doc-text-muted); }
+  .matrix-evidence {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.77rem;
+    line-height: 1.45;
+    color: var(--doc-text-muted);
+    text-align: left;
+  }
+  .matrix-average-row td {
+    background: #f7f4ef;
+    font-weight: 600;
+  }
+  .matrix-empty {
+    background: var(--doc-bg);
+    border: 1px dashed var(--doc-border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    color: var(--doc-text-muted);
+  }
   .footer {
     text-align: center;
     color: var(--doc-text-muted);
@@ -421,12 +522,17 @@
       align-items: flex-start;
     }
     .container { padding: 1.25rem 1.25rem 3rem; }
+    .matrix-table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
   }
 </style>
 </head>
 <body>
 <div class="header">
-  <h1>Candidate Comparison</h1>
+  <h1 id="pageTitle">Candidate Comparison</h1>
   <div class="subtitle" id="subtitle"></div>
   <div class="meta" id="meta"></div>
 </div>
@@ -463,6 +569,7 @@
   </div>
 
   <div id="cardsContainer"></div>
+  <div id="matrixSection"></div>
 
   <div class="footer">
     Candidate Interview Kit — theProductPath | Built by Steven Jones
@@ -511,12 +618,14 @@ function barColor(score) {
 
 function renderMeta() {
   document.title = appData.title || "Candidate Comparison";
+  document.getElementById("pageTitle").textContent = appData.title || "Candidate Comparison";
   document.getElementById("subtitle").textContent =
-    [appData.role, appData.company].filter(Boolean).join(" | ");
+    appData.company || appData.role || "";
   document.getElementById("meta").innerHTML = [
+    appData.reqId ? `Req ID: ${escapeHtml(appData.reqId)}` : null,
     appData.hiringManager ? `Hiring Manager: ${escapeHtml(appData.hiringManager)}` : null,
     `Candidates: ${appData.counts.total} (${appData.counts.assessed} assessed, ${appData.counts.pending} pending, ${appData.counts.notStarted} not started)`,
-    `Generated: ${formatDate(appData.generatedAt)}`
+    `Last updated: ${formatDate(appData.generatedAt)}`
   ].filter(Boolean).map((item) => `<span>${item}</span>`).join("");
 }
 
@@ -542,6 +651,7 @@ function renderFilters() {
       renderFilters();
       renderTable();
       renderCards();
+      renderMatrices();
     });
   });
 }
@@ -627,6 +737,110 @@ function renderCards() {
   container.querySelectorAll(".card-header").forEach((header) => {
     header.addEventListener("click", () => toggleCard(header.dataset.cardIndex));
   });
+}
+
+function renderMatrices() {
+  const container = document.getElementById("matrixSection");
+  const visibleCandidates = filteredCandidates();
+  if (!visibleCandidates.length) {
+    container.innerHTML = "";
+    return;
+  }
+
+  const jdDimensions = collectDimensions(visibleCandidates, "jdCompetencies");
+  const qualDimensions = collectDimensions(visibleCandidates, "qualDimensions");
+
+  container.innerHTML = `
+    <section class="matrix-section">
+      <div class="section-kicker">Bottom Comparison View</div>
+      <h2>Side-by-Side Comparison</h2>
+      ${renderMatrixCard("JD Competencies (1–5)", jdDimensions, visibleCandidates, "jdCompetencies", "evidence")}
+      ${renderMatrixCard("Qualitative Dimensions (1–5)", qualDimensions, visibleCandidates, "qualDimensions", "evidence")}
+    </section>
+  `;
+}
+
+function renderMatrixCard(title, dimensions, visibleCandidates, key, evidenceKey) {
+  if (!dimensions.length) {
+    return `<div class="matrix-empty">${escapeHtml(title)} will appear once those dimensions exist for at least one visible candidate.</div>`;
+  }
+
+  const rows = dimensions.map((dimension) => {
+    const cells = visibleCandidates.map((candidate) => {
+      const entry = (candidate[key] || []).find((item) => item.dim === dimension);
+      const score = entry ? entry.score : null;
+      const evidence = entry && entry[evidenceKey] ? entry[evidenceKey] : null;
+      return `
+        <td class="matrix-cell">
+          ${renderMatrixScore(score)}
+          ${evidence ? `<span class="matrix-evidence">${escapeHtml(evidence)}</span>` : ""}
+        </td>
+      `;
+    }).join("");
+    return `
+      <tr>
+        <td class="matrix-dimension">
+          <strong>${escapeHtml(dimension)}</strong>
+          <div class="matrix-subtext">Compare across all visible candidates</div>
+        </td>
+        ${cells}
+      </tr>
+    `;
+  }).join("");
+
+  const averages = visibleCandidates.map((candidate) => {
+    const scores = (candidate[key] || []).map((item) => item.score).filter((score) => score !== null && score !== undefined);
+    const avg = scores.length ? Number((scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(1)) : null;
+    return `<td class="matrix-cell">${renderMatrixScore(avg)}</td>`;
+  }).join("");
+
+  const headers = visibleCandidates.map((candidate) => {
+    const radarIndex = getRadarIndexByName(candidate.name);
+    const color = radarIndex !== -1 ? radarCandidates[radarIndex].color : "var(--accent)";
+    return `<th class="candidate-th" style="color:${color};">${escapeHtml(candidate.name.toUpperCase())}</th>`;
+  }).join("");
+
+  return `
+    <div class="matrix-card">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Dimension</th>
+            ${headers}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+          <tr class="matrix-average-row">
+            <td class="matrix-dimension"><strong>Average</strong></td>
+            ${averages}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function collectDimensions(visibleCandidates, key) {
+  const seen = new Set();
+  const ordered = [];
+  visibleCandidates.forEach((candidate) => {
+    (candidate[key] || []).forEach((entry) => {
+      const normalized = String(entry.dim || "").trim().toLowerCase();
+      if (!normalized || seen.has(normalized)) return;
+      seen.add(normalized);
+      ordered.push(entry.dim);
+    });
+  });
+  return ordered;
+}
+
+function renderMatrixScore(score) {
+  if (score === null || score === undefined) {
+    return `<span class="matrix-score empty">—</span>`;
+  }
+  const cls = score >= 4 ? "high" : score >= 3 ? "mid" : "low";
+  return `<span class="matrix-score ${cls}">${formatScore(score)}</span>`;
 }
 
 function buildCardBody(candidate) {
@@ -876,6 +1090,7 @@ document.querySelectorAll(".summary-table thead th").forEach((header) => {
     header.querySelector(".sort-arrow").textContent = dir === "desc" ? "▾" : "▴";
     renderTable();
     renderCards();
+    renderMatrices();
   });
 });
 
@@ -885,6 +1100,7 @@ renderMeta();
 renderFilters();
 renderTable();
 renderCards();
+renderMatrices();
 renderRadarLegend();
 renderRadar();
 renderSelectionSummary();

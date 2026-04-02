@@ -78,11 +78,19 @@ Scan the folder and determine state:
 |---|---|
 | No `candidates/` folder | Offer Setup |
 | Candidate folder exists, no `brief.md` | Offer to generate prep brief |
-| `brief.md` exists, no `assessment.md` | Ask: "Have you completed the interview with [name]? Share your notes." |
+| `brief.md` exists, no `assessment.md` | If interview notes are available, generate the assessment immediately. Otherwise ask for notes. |
 | Any candidate folders exist | Offer to refresh `comparison.html` from source files |
 | Mixed state (some candidates assessed, some not) | List state of each candidate, ask what to do next |
 
 **If still uncertain:** Present a numbered menu of available actions and ask the user to choose.
+
+## Interaction Defaults
+
+- Assume the user starts from the `individual/` folder when using this mode.
+- If the user provides post-interview notes, a transcript, a markdown/text file, or verbal feedback for a candidate, treat that as a direct instruction to generate the assessment.
+- Do not ask whether they also want an assessment unless the candidate identity is unclear or the notes are too incomplete to proceed.
+- After creating `brief.md` or `assessment.md`, always give the user a compact preview in chat so they can review the result immediately.
+- If your environment supports opening or previewing files, offer that as an optional next step after the in-chat summary.
 
 ---
 
@@ -90,21 +98,22 @@ Scan the folder and determine state:
 
 When the user asks to set up a new kit:
 
-1. Initialize the current folder by running:
+1. Assume the user started their session from the `individual/` folder in this repo or from a copied individual-kit folder.
+2. Initialize the current folder by running:
 
 ```bash
 node skill/scripts/init-kit.js
 ```
 
-2. Create the scaffold:
+3. Create the scaffold:
    - `candidates/`
    - `SKILL.md`
    - `skill/`
    - `START-HERE.md`
    - `INTERVIEWER-NOTES-OPTIONAL.txt`
-3. Do not create `comparison.html` yet. The first refresh will create it from the bundled template asset.
-4. Tell the user that a job description file must be added before any real workflow can run.
-5. Tell the user that interviewer notes are optional, but recommended.
+4. Do not create `comparison.html` yet. The first refresh will create it from the bundled template asset.
+5. Tell the user that a job description file must be added before any real workflow can run.
+6. Tell the user that interviewer notes are optional, but recommended.
 
 ### Required source file detection
 
@@ -219,6 +228,11 @@ Areas where the resume is thin or unclear — worth exploring:
 
 **After writing:** Confirm "Prep brief for [name] is ready at `candidates/{name}/brief.md`."
 
+Then give the user a short preview in chat:
+- candidate snapshot
+- overall JD match
+- 2-3 highest-value probe areas or suggested questions
+
 Then refresh the comparison tool by running `node skill/scripts/refresh-comparison.js`.
 
 ---
@@ -228,9 +242,6 @@ Then refresh the comparison tool by running `node skill/scripts/refresh-comparis
 **Trigger:** "Post-interview: [name]" or brief exists but no assessment.md
 
 **Prerequisite:** Confirm a job description file exists in the kit root before continuing.
-
-**Ask the user:**
-"I'm ready to structure your assessment for [name]. Share your interview notes — raw is fine. Voice memo transcript, bullet points, whatever you have."
 
 **Read:**
 - the detected job description file
@@ -281,6 +292,12 @@ Then refresh the comparison tool by running `node skill/scripts/refresh-comparis
 ```
 
 **After writing:** Confirm "Assessment for [name] is ready at `candidates/{name}/assessment.md`."
+
+Then give the user a short preview in chat:
+- overall impression
+- recommendation
+- top strengths
+- top concerns
 
 Then refresh the comparison tool by running `node skill/scripts/refresh-comparison.js`.
 
