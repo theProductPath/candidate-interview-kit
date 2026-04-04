@@ -75,7 +75,7 @@ The kit runs through three steps, in order, for each candidate:
 ```
 Candidate-Interview-Kit/
 ├── README.md                   ← This file
-├── individual-kit/
+├── individual-kit/             ← One interviewer, one role, full pipeline
 │   ├── SKILL.md                ← The AI skill (copy this to your kit folder)
 │   ├── skill/                  ← Supporting skill files (copy this too)
 │   └── example/                ← Working example (AirCorp — Product Analyst)
@@ -84,26 +84,45 @@ Candidate-Interview-Kit/
 │           ├── interviewer-notes.md
 │           ├── candidates/
 │           └── comparison.html
+├── team-kit/                   ← Multiple interviewers, coordinated assessments
+│   ├── SKILL.md                ← The team AI skill
+│   ├── skill/                  ← Team-specific scripts and comparison template
+│   └── example/                ← Working example (AirCorp — 4 interviewers, 4 candidates)
+│       └── AirCorp-ProductAnalyst/
+│           ├── _team.md
+│           ├── job-description.md
+│           ├── candidates/
+│           └── comparison.html
 ```
 
 ---
 
 ## Getting Started
 
+### Individual Kit (solo interviewer)
+
 1. Download or clone this repo
 2. Start a session in your preferred LLM tool with `individual-kit/` as the working directory
-3. Point the chat at that `individual-kit/` folder
-4. Type `initialize`
-5. Let the LLM scaffold a fresh working kit for the role you are hiring for
-6. Add a job description file to that new kit
-7. Optionally add interviewer notes or focus areas
-8. Add candidates and continue the interview workflow
-
-If you prefer scripts directly, the equivalent initializer is:
+3. Type `initialize` — the LLM scaffolds a fresh working kit
+4. Add a job description file and optionally interviewer notes
+5. Add candidates and follow the prep → assess → compare workflow
 
 ```bash
-cd individual
+cd individual-kit
 node skill/scripts/init-kit.js /path/to/new-kit-folder
+```
+
+### Team Kit (multiple interviewers)
+
+1. Start a session with `team-kit/` as the working directory
+2. Type `initialize` — the LLM scaffolds a team kit with `_team.md`
+3. Edit `_team.md` with your interviewer roster and focus areas
+4. Add a job description file
+5. Add candidates, generate per-interviewer briefs, capture assessments, and refresh the team comparison tool
+
+```bash
+cd team-kit
+node skill/scripts/init-team-kit.js /path/to/new-kit-folder
 ```
 
 The skill handles the rest.
@@ -112,12 +131,10 @@ The skill handles the rest.
 
 - A job description file is required before the skill can generate briefs, assessments, or the comparison tool.
 - Accepted JD examples: `job-description.md`, `jd.pdf`, `role-description.docx`
-- Interviewer notes are optional.
-- Accepted notes examples: `interviewer-notes.md`, `hiring-manager-notes.pdf`, `focus-areas.txt`
-- The scaffold placeholder `INTERVIEWER-NOTES-OPTIONAL.txt` is not treated as real interviewer notes.
+- **Individual Kit:** Interviewer notes are optional but recommended.
+- **Team Kit:** `_team.md` is required — it defines the interviewer roster and per-interviewer focus areas.
 - `add-candidate.js` will try to refresh `comparison.html` automatically after creating the folder.
 - If a candidate name is entered incorrectly, use `node skill/scripts/rename-candidate.js "Old Name" "New Name"`.
-- When you later add a `team-kit/` edition, users should start from that folder the same way they start from `individual-kit/` now.
 
 ---
 

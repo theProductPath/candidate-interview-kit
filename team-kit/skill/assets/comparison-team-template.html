@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Candidate Comparison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #181d26; --surface: #222831; --accent: #c75c2a; --accent-light: #e8865a;
+    --accent-subtle: rgba(199,92,42,0.12); --text: #e4eaf4; --muted: #8895aa;
+    --border: #2e3848; --radius: 8px; --radius-sm: 4px;
+    --doc-bg-page: #f0ede8; --doc-bg: #ffffff; --doc-text-body: #374151;
+    --doc-text-muted: #6b7280; --doc-text-heading: #1f2937; --doc-border: #e5e2dd;
+    --doc-card-bg: #ffffff; --doc-card-border: #e5e2dd;
+    --doc-green: #16a34a; --doc-green-subtle: rgba(22,163,74,0.1);
+    --doc-amber: #d97706; --doc-amber-subtle: rgba(217,119,6,0.1);
+    --doc-red: #dc2626; --doc-red-subtle: rgba(220,38,38,0.08);
+    --doc-score-bg: #f9f7f4;
+  }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--doc-bg-page); color: var(--doc-text-body); font-size: 14px; line-height: 1.5; }
+  /* ── Header ──────────────────────────── */
+  .header { background: linear-gradient(180deg, var(--surface) 0%, rgba(42,48,60,0.95) 100%); border-bottom: 3px solid var(--accent); padding: 24px 32px; color: var(--text); }
+  .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .header .meta { font-size: 12px; color: var(--muted); }
+  .header .meta span { margin-right: 16px; }
+  /* ── Container ───────────────────────── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  /* ── Toggle Panels ───────────────────── */
+  .panel { background: var(--doc-card-bg); border: 1px solid var(--doc-card-border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+  .panel-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--doc-text-muted); margin-bottom: 10px; }
+  .panel-hint { font-size: 11px; color: var(--doc-text-muted); margin-top: 8px; }
+  /* ── Interviewer Pills ───────────────── */
+  .iv-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .iv-pill { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; border: 2px solid transparent; cursor: pointer; font-size: 12px; transition: all 150ms; background: var(--doc-score-bg); }
+  .iv-pill.active { border-color: var(--pill-color); background: color-mix(in srgb, var(--pill-color) 8%, white); }
+  .iv-pill.locked { cursor: default; border-color: #94a3b8; background: #f1f5f9; opacity: 0.85; }
+  .iv-pill .swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--pill-color); flex-shrink: 0; }
+  .iv-pill .pill-name { font-weight: 600; color: var(--doc-text-heading); }
+  .iv-pill .pill-title { color: var(--doc-text-muted); font-size: 11px; }
+  .iv-pill .pill-role { font-size: 10px; font-weight: 600; color: var(--accent); background: var(--accent-subtle); padding: 1px 6px; border-radius: 10px; }
+  .iv-pill .pill-lock { font-size: 10px; color: #64748b; }
+  /* ── Candidate Toggles ───────────────── */
+  .cand-toggles { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cand-toggle { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius); border: 2px solid transparent; cursor: pointer; font-size: 12px; transition: all 150ms; background: var(--doc-score-bg); min-width: 160px; }
+  .cand-toggle.active { border-color: var(--cand-color); background: color-mix(in srgb, var(--cand-color) 6%, white); }
+  .cand-toggle.disabled { opacity: 0.4; cursor: not-allowed; }
+  .cand-toggle .swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--cand-color); flex-shrink: 0; }
+  .cand-toggle .toggle-name { font-weight: 600; color: var(--doc-text-heading); }
+  .cand-toggle .toggle-status { font-size: 11px; color: var(--doc-text-muted); }
+  .toggle-warning { display: none; font-size: 11px; color: var(--doc-amber); margin-top: 6px; }
+  .count-label { font-size: 12px; color: var(--doc-text-muted); margin-bottom: 12px; }
+  /* ── Summary Cards ───────────────────── */
+  .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--doc-card-bg); border: 1px solid var(--doc-card-border); border-radius: var(--radius); padding: 16px; border-top: 3px solid var(--card-color); }
+  .card-name { font-size: 15px; font-weight: 700; color: var(--card-color); margin-bottom: 10px; }
+  .scores-row { display: flex; gap: 16px; margin-bottom: 10px; }
+  .scores-row > div { flex: 1; }
+  .score-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--doc-text-muted); margin-bottom: 2px; }
+  .score-value { font-size: 22px; font-weight: 700; color: var(--doc-text-heading); }
+  .score-value span { font-size: 12px; font-weight: 400; color: var(--doc-text-muted); }
+  .card-summary { font-size: 12px; color: var(--doc-text-muted); line-height: 1.5; border-top: 1px solid var(--doc-border); padding-top: 8px; }
+  .card-status { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; }
+  .status-assessed { background: var(--doc-green-subtle); color: var(--doc-green); }
+  .status-partial { background: var(--doc-amber-subtle); color: var(--doc-amber); }
+  .status-pending { background: rgba(59,130,246,0.1); color: #3b82f6; }
+  .status-not-started { background: #f1f5f9; color: #94a3b8; }
+  /* ── Ranking Bar ─────────────────────── */
+  .ranking-bar { background: var(--doc-card-bg); border: 1px solid var(--doc-card-border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px; display: none; }
+  .ranking-bar h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--doc-text-muted); margin-bottom: 10px; }
+  .ranking-entries { display: flex; gap: 16px; flex-wrap: wrap; }
+  .ranking-entry { display: flex; align-items: center; gap: 10px; }
+  .ranking-pos { width: 24px; height: 24px; border-radius: 50%; background: var(--doc-score-bg); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--doc-text-heading); }
+  .ranking-pos.gold { background: #fef3c7; color: #92400e; }
+  .ranking-name { font-weight: 600; font-size: 13px; }
+  .ranking-score { font-size: 12px; color: var(--doc-text-muted); }
+  /* ── Radar Section ───────────────────── */
+  .radar-section { background: var(--doc-card-bg); border: 1px solid var(--doc-card-border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; text-align: center; }
+  .radar-section h3 { font-size: 13px; font-weight: 700; color: var(--doc-text-heading); margin-bottom: 12px; text-align: left; }
+  .no-selection { padding: 40px; color: var(--doc-text-muted); font-size: 13px; }
+  /* ── Detail Breakdown ────────────────── */
+  .bd-section { background: var(--doc-card-bg); border: 1px solid var(--doc-card-border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+  .bd-section h4 { font-size: 13px; font-weight: 700; color: var(--doc-text-heading); margin-bottom: 12px; }
+  .bd-head { display: flex; padding: 8px 0; border-bottom: 2px solid var(--doc-border); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--doc-text-muted); }
+  .col-name { flex: 0 0 200px; }
+  .col-scores { flex: 1; display: flex; gap: 8px; }
+  .col-scores > div { flex: 1; text-align: center; }
+  .col-expand { flex: 0 0 30px; text-align: center; cursor: pointer; color: var(--doc-text-muted); user-select: none; }
+  .bd-row { border-bottom: 1px solid var(--doc-border); }
+  .bd-row:last-child { border-bottom: none; }
+  .bd-row-main { display: flex; align-items: center; padding: 10px 0; cursor: pointer; }
+  .bd-row-main:hover { background: #faf8f5; }
+  .bd-evidence { display: none; padding: 8px 0 12px 16px; }
+  .bd-row.open .bd-evidence { display: block; }
+  .bd-row.open .col-expand { transform: rotate(45deg); }
+  .sc { display: flex; align-items: center; gap: 6px; }
+  .sc-track { flex: 1; height: 6px; background: #e8e5e0; border-radius: 3px; overflow: hidden; }
+  .sc-fill { height: 100%; border-radius: 3px; transition: width 300ms; }
+  .sc-num { font-size: 12px; font-weight: 600; min-width: 28px; text-align: right; color: var(--doc-text-heading); }
+  /* ── Evidence Cards ──────────────────── */
+  .ev-card { padding: 8px 12px; margin: 6px 0; border-radius: var(--radius-sm); font-size: 12px; line-height: 1.6; color: var(--doc-text-body); border-left: 3px solid #ccc; background: var(--doc-score-bg); }
+  .ev-tag { display: inline-block; font-size: 10px; font-weight: 700; color: white; padding: 1px 8px; border-radius: 10px; margin-bottom: 4px; }
+  /* ── Footer ──────────────────────────── */
+  .footer { text-align: center; padding: 24px; font-size: 11px; color: var(--doc-text-muted); }
+  @media (max-width: 640px) {
+    .col-name { flex: 0 0 120px; }
+    .summary-cards { grid-template-columns: 1fr; }
+    .scores-row { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<script>
+const DATA = __COMPARISON_DATA__;
+
+let activeInterviewers = DATA.interviewers.filter(iv => {
+  // Activate interviewers who have at least one assessment
+  return DATA.candidates.some(c => c.assessments[iv.id]);
+}).map(iv => iv.id);
+
+let selected = DATA.candidates.filter(c => c.status !== "not-started").slice(0, 3).map(c => c.slug);
+
+function getQlScores(candidate) {
+  const active = activeInterviewers.filter(id => candidate.assessments[id]);
+  if (active.length === 0) return DATA.qualitativeDimensions.map(() => 0);
+  return DATA.qualitativeDimensions.map((dim, i) => {
+    const scores = active.map(id => {
+      const a = candidate.assessments[id];
+      const d = a.qualDimensions.find(q => q.dim === dim);
+      return d ? d.score : 0;
+    }).filter(s => s > 0);
+    return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  });
+}
+
+function getQlAvg(candidate) {
+  const scores = getQlScores(candidate);
+  const valid = scores.filter(s => s > 0);
+  return valid.length > 0 ? valid.reduce((a, b) => a + b, 0) / valid.length : 0;
+}
+
+function getActiveSummaries(candidate) {
+  return activeInterviewers
+    .filter(id => candidate.assessments[id])
+    .map(id => {
+      const iv = DATA.interviewers.find(i => i.id === id);
+      return { interviewer: iv, impression: candidate.assessments[id].overallImpression || "" };
+    });
+}
+
+function init() {
+  document.querySelector('.header h1').textContent = DATA.title;
+  const meta = document.querySelector('.header .meta');
+  meta.innerHTML = `<span>${DATA.company}</span><span>Hiring Manager: ${DATA.hiringManager}</span><span>${DATA.interviewers.length} interviewers</span><span>Generated: ${new Date(DATA.generatedAt).toLocaleDateString()}</span>`;
+  render();
+}
+
+function render() {
+  renderInterviewerToggles();
+  renderCandidateToggles();
+  renderSummaryCards();
+  renderRanking();
+  renderRadar();
+  renderDetail();
+}
+
+function renderInterviewerToggles() {
+  const el = document.getElementById("ivToggles");
+  let html = `<div class="iv-pill locked" style="--pill-color:#94a3b8"><div class="swatch"></div><span class="pill-name">Resume Analysis</span><span class="pill-lock">✓ Always On</span></div>`;
+  DATA.interviewers.forEach(iv => {
+    const isActive = activeInterviewers.includes(iv.id);
+    const hasData = DATA.candidates.some(c => c.assessments[iv.id]);
+    html += `<div class="iv-pill ${isActive ? 'active' : ''} ${!hasData ? 'disabled' : ''}" style="--pill-color:${iv.color}" onclick="toggleInterviewer('${iv.id}')">
+      <div class="swatch"></div>
+      <span class="pill-name">${iv.name}</span>
+      <span class="pill-title">${iv.title}</span>
+      ${iv.isHiringManager ? '<span class="pill-role">HM</span>' : ''}
+      ${!hasData ? '<span class="pill-lock">No assessments</span>' : ''}
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function toggleInterviewer(id) {
+  const hasData = DATA.candidates.some(c => c.assessments[id]);
+  if (!hasData) return;
+  if (activeInterviewers.includes(id)) {
+    activeInterviewers = activeInterviewers.filter(i => i !== id);
+  } else {
+    activeInterviewers.push(id);
+  }
+  render();
+}
+
+function renderCandidateToggles() {
+  const el = document.getElementById("candToggles");
+  const nActive = activeInterviewers.length;
+  el.innerHTML = DATA.candidates.map(c => {
+    const isSel = selected.includes(c.slug);
+    const isDis = !isSel && selected.length >= 3;
+    const statusLabel = c.status === "assessed" ? "All assessed" : c.status === "partial" ? `${c.assessmentCount}/${c.totalInterviewers} assessed` : c.status === "pending" ? "Briefs only" : "Not started";
+    return `<div class="cand-toggle ${isSel ? 'active' : ''} ${isDis ? 'disabled' : ''}" style="--cand-color:${c.color}" onclick="toggleCandidate('${c.slug}')">
+      <div class="swatch"></div>
+      <div><div class="toggle-name">${c.name}</div><div class="toggle-status">${statusLabel}</div></div>
+    </div>`;
+  }).join("");
+  document.getElementById("toggleWarning").style.display = selected.length >= 3 ? "block" : "none";
+  document.getElementById("candCount").textContent = `${selected.length} candidate${selected.length !== 1 ? 's' : ''} selected`;
+}
+
+function toggleCandidate(slug) {
+  if (selected.includes(slug)) { selected = selected.filter(s => s !== slug); }
+  else if (selected.length < 3) { selected.push(slug); }
+  else return;
+  render();
+}
+
+function renderSummaryCards() {
+  const nIv = activeInterviewers.length;
+  const qlLabel = nIv > 0 ? `QL (${nIv} interviewer${nIv !== 1 ? 's' : ''})` : 'QL (none)';
+  document.getElementById("summaryCards").innerHTML = selected.map(slug => {
+    const c = DATA.candidates.find(x => x.slug === slug);
+    if (!c) return '';
+    const jdA = c.jdScore || 0;
+    const qlA = getQlAvg(c);
+    const comb = nIv > 0 && qlA > 0 ? (jdA + qlA) / 2 : jdA;
+    const summaries = getActiveSummaries(c);
+    const summaryHtml = summaries.length > 0 ? summaries[0].impression : (c.snapshot || 'No assessment data yet.');
+    const statusClass = `status-${c.status}`;
+    const statusLabel = c.status === "assessed" ? "Assessed" : c.status === "partial" ? "Partial" : c.status === "pending" ? "Pending" : "Not Started";
+    return `<div class="summary-card" style="--card-color:${c.color}">
+      <span class="card-status ${statusClass}">${statusLabel}</span>
+      <div class="card-name">${c.name}</div>
+      <div class="scores-row">
+        <div><div class="score-label">JD Competency</div><div class="score-value">${jdA.toFixed(1)}<span>/5</span></div></div>
+        <div><div class="score-label">${qlLabel}</div><div class="score-value">${nIv > 0 && qlA > 0 ? qlA.toFixed(1) : '—'}<span>${nIv > 0 && qlA > 0 ? '/5' : ''}</span></div></div>
+        <div><div class="score-label">Combined</div><div class="score-value">${comb.toFixed(1)}<span>/5</span></div></div>
+      </div>
+      <div class="card-summary">${summaryHtml}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderRanking() {
+  const bar = document.getElementById("rankingBar");
+  if (selected.length < 2) { bar.style.display = "none"; return; }
+  bar.style.display = "block";
+  const nIv = activeInterviewers.length;
+  const data = selected.map(slug => {
+    const c = DATA.candidates.find(x => x.slug === slug);
+    const jdA = c.jdScore || 0;
+    const qlA = getQlAvg(c);
+    const comb = nIv > 0 && qlA > 0 ? (jdA + qlA) / 2 : jdA;
+    return { c, jdA, qlA, comb };
+  }).sort((a, b) => b.comb - a.comb);
+  document.getElementById("rankingEntries").innerHTML = data.map((d, i) => `
+    <div class="ranking-entry">
+      <div class="ranking-pos ${i === 0 ? 'gold' : ''}">${i + 1}</div>
+      <div>
+        <div class="ranking-name" style="color:${d.c.color}">${d.c.name}</div>
+        <div class="ranking-score">Combined: ${d.comb.toFixed(2)} · JD: ${d.jdA.toFixed(2)} · QL (${nIv}): ${d.qlA > 0 ? d.qlA.toFixed(2) : '—'}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderRadar() {
+  const wrap = document.getElementById("radarWrap");
+  const sel = selected.map(s => DATA.candidates.find(c => c.slug === s)).filter(c => c && c.jdCompetencies.length > 0);
+  if (sel.length === 0) { wrap.innerHTML = '<div class="no-selection">Select candidates to view radar chart.</div>'; return; }
+
+  const dims = DATA.competencyDimensions.length > 0 ? DATA.competencyDimensions : sel[0].jdCompetencies.map(c => c.dim);
+  const w = 480, h = 480, cx = w/2, cy = h/2, maxR = 140, sides = dims.length;
+  if (sides === 0) { wrap.innerHTML = '<div class="no-selection">No competency dimensions available.</div>'; return; }
+  const slice = (Math.PI * 2) / sides;
+  const r = s => (s / 5) * maxR;
+
+  let svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="overflow:visible;max-width:100%;">`;
+  for (let i = 1; i <= 5; i++) { svg += `<circle cx="${cx}" cy="${cy}" r="${r(i)}" fill="none" stroke="#d1cdc6" stroke-width="0.75"/>`; }
+  dims.forEach((dim, i) => {
+    const a = slice * i - Math.PI / 2;
+    const x = cx + maxR * Math.cos(a), y = cy + maxR * Math.sin(a);
+    svg += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#d1cdc6" stroke-width="0.75"/>`;
+    const lr = maxR + 30;
+    const lx = cx + lr * Math.cos(a), ly = cy + lr * Math.sin(a);
+    const shortDim = dim.length > 20 ? dim.substring(0, 18) + '…' : dim;
+    svg += `<text x="${lx}" y="${ly}" text-anchor="middle" dy="0.3em" font-size="10" fill="#6b7280" font-family="Inter,sans-serif">${shortDim}</text>`;
+  });
+  sel.forEach(c => {
+    const scores = dims.map(dim => { const e = c.jdCompetencies.find(j => j.dim === dim); return e ? e.score : 0; });
+    let pts = scores.map((s, i) => { const a = slice * i - Math.PI / 2; const rv = r(s); return `${cx + rv * Math.cos(a)},${cy + rv * Math.sin(a)}`; }).join(" ");
+    svg += `<polygon points="${pts}" fill="${c.color}" stroke="${c.color}" stroke-width="2" fill-opacity="0.25" stroke-opacity="0.8"/>`;
+    scores.forEach((s, i) => { const a = slice * i - Math.PI / 2; const rv = r(s); svg += `<circle cx="${cx + rv * Math.cos(a)}" cy="${cy + rv * Math.sin(a)}" r="3" fill="${c.color}" stroke="#f0ede8" stroke-width="1.5"/>`; });
+  });
+  svg += '</svg>';
+  wrap.innerHTML = svg;
+}
+
+function renderDetail() {
+  const wrap = document.getElementById("detailWrap");
+  const sel = selected.map(s => DATA.candidates.find(c => c.slug === s)).filter(Boolean);
+  if (sel.length === 0) { wrap.innerHTML = '<div class="no-selection">Select candidates to view detailed breakdown.</div>'; return; }
+
+  let html = '';
+  // JD Competencies
+  const dims = DATA.competencyDimensions.length > 0 ? DATA.competencyDimensions : (sel[0].jdCompetencies || []).map(c => c.dim);
+  html += `<div class="bd-section"><h4>JD Competencies (Resume Analysis)</h4><div class="bd-head"><div class="col-name">Dimension</div><div class="col-scores">${sel.map(c => `<div style="color:${c.color};font-weight:700">${c.name}</div>`).join('')}</div><div class="col-expand"></div></div>`;
+  dims.forEach(dim => {
+    html += `<div class="bd-row"><div class="bd-row-main"><div class="col-name">${dim}</div><div class="col-scores">${sel.map(c => {
+      const e = c.jdCompetencies.find(j => j.dim === dim);
+      const s = e ? e.score : 0; const p = (s / 5) * 100;
+      return `<div class="sc"><div class="sc-track"><div class="sc-fill" style="width:${p}%;background:${c.color}"></div></div><div class="sc-num">${s.toFixed(1)}</div></div>`;
+    }).join('')}</div><div class="col-expand">+</div></div>`;
+    html += `<div class="bd-evidence">${sel.map(c => {
+      const e = c.jdCompetencies.find(j => j.dim === dim);
+      return `<div class="ev-card" style="border-left-color:${c.color}"><strong>${c.name}:</strong> ${e ? e.evidence : 'No data'}</div>`;
+    }).join('')}</div></div>`;
+  });
+  html += '</div>';
+
+  // Qualitative Dimensions
+  const nIv = activeInterviewers.length;
+  html += `<div class="bd-section"><h4>Qualitative Dimensions (${nIv} Interviewer${nIv !== 1 ? 's' : ''} Active)</h4><div class="bd-head"><div class="col-name">Dimension</div><div class="col-scores">${sel.map(c => `<div style="color:${c.color};font-weight:700">${c.name}</div>`).join('')}</div><div class="col-expand"></div></div>`;
+  DATA.qualitativeDimensions.forEach(dim => {
+    html += `<div class="bd-row"><div class="bd-row-main"><div class="col-name">${dim}</div><div class="col-scores">${sel.map(c => {
+      const qlScores = getQlScores(c);
+      const idx = DATA.qualitativeDimensions.indexOf(dim);
+      const s = qlScores[idx] || 0; const p = (s / 5) * 100;
+      return `<div class="sc"><div class="sc-track"><div class="sc-fill" style="width:${p}%;background:${c.color}"></div></div><div class="sc-num">${s > 0 ? s.toFixed(1) : '—'}</div></div>`;
+    }).join('')}</div><div class="col-expand">+</div></div>`;
+    html += `<div class="bd-evidence">${sel.map(c => {
+      let evHtml = '';
+      activeInterviewers.forEach(ivId => {
+        if (!c.assessments[ivId]) return;
+        const iv = DATA.interviewers.find(i => i.id === ivId);
+        const d = c.assessments[ivId].qualDimensions.find(q => q.dim === dim);
+        if (d) {
+          evHtml += `<div class="ev-card" style="border-left-color:${iv.color}"><div class="ev-tag" style="background:${iv.color}">${iv.name}</div> ${d.evidence}</div>`;
+        }
+      });
+      return evHtml || `<div class="ev-card" style="border-left-color:${c.color}">No qualitative data for active interviewers.</div>`;
+    }).join('')}</div></div>`;
+  });
+  html += '</div>';
+
+  wrap.innerHTML = html;
+  document.querySelectorAll('.bd-row').forEach(row => {
+    row.querySelector('.bd-row-main').addEventListener('click', () => row.classList.toggle('open'));
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+<div class="header">
+  <h1></h1>
+  <div class="meta"></div>
+</div>
+
+<div class="container">
+  <!-- Interviewer Toggles -->
+  <div class="panel">
+    <div class="panel-label">Interviewers</div>
+    <div class="iv-pills" id="ivToggles"></div>
+    <div class="panel-hint">Toggle interviewers to see how qualitative scores change. Resume analysis is always included.</div>
+  </div>
+
+  <!-- Candidate Toggles -->
+  <div class="panel">
+    <div class="panel-label">Candidates</div>
+    <div id="candCount" class="count-label"></div>
+    <div class="cand-toggles" id="candToggles"></div>
+    <div class="toggle-warning" id="toggleWarning">Maximum 3 candidates for chart comparison. Deselect one to add another.</div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards" id="summaryCards"></div>
+
+  <!-- Ranking Bar -->
+  <div class="ranking-bar" id="rankingBar">
+    <h3>Ranking</h3>
+    <div class="ranking-entries" id="rankingEntries"></div>
+  </div>
+
+  <!-- Radar Chart -->
+  <div class="radar-section">
+    <h3>JD Competency Radar (Resume Analysis)</h3>
+    <div id="radarWrap"></div>
+  </div>
+
+  <!-- Detailed Breakdown -->
+  <div id="detailWrap"></div>
+</div>
+
+<div class="footer">
+  Candidate Interview Kit — Team Comparison · theProductPath · Generated from markdown source files
+</div>
+
+</body>
+</html>

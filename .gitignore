@@ -7,3 +7,6 @@ __pycache__/
 
 # Artifacts
 comparison-save.html
+
+# Planning docs (specs, build notes)
+_planning/

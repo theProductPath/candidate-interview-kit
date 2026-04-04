@@ -518,30 +518,32 @@
       <div class="two-col">
         <div>
           <div class="section-label">What's in the kit</div>
-          <h2 class="section-heading">A skill, a folder structure, and a working example.</h2>
+          <h2 class="section-heading">Two kits. Same workflow. Choose your scale.</h2>
           <div class="section-body">
-            <p>The kit is an AI skill — a set of instructions any LLM can follow. Claude, ChatGPT, Codex, local models. Point it at your folder and it knows what to do.</p>
-            <p>The example walks through a complete hiring loop for a fictional Product Analyst role at AirCorp: three candidates, two fully assessed, one still in prep. <strong>Everything you need to see how it works before you run it yourself.</strong></p>
+            <p>The <strong>Individual Kit</strong> is for a single interviewer running the full pipeline. The <strong>Team Kit</strong> adds multi-interviewer coordination: per-interviewer prep briefs, progressive enrichment from earlier interviews, and a comparison tool with interviewer toggles.</p>
+            <p>Both are AI skills — instructions any LLM can follow. Claude, ChatGPT, Codex, local models. Point it at your folder and it knows what to do. <strong>The example walks through a complete AirCorp hiring loop with working data.</strong></p>
           </div>
         </div>
         <div class="command-block">
 <span class="cmd-dir">Candidate-Interview-Kit/</span>
 ├── README.md
-├── individual-kit/
+├── <span class="cmd-dir">individual-kit/</span>          ← Solo interviewer
 │   ├── <span class="cmd-file">SKILL.md</span>
-│   └── example/
-│       └── <span class="cmd-dir">AirCorp-ProductAnalyst/</span>
-│           ├── <span class="cmd-file">job-description.md</span>
-│           ├── <span class="cmd-file">interviewer-notes.md</span>
-│           └── candidates/
-│               ├── <span class="cmd-candidate">james-okafor/</span>
-│               │   ├── brief.md
-│               │   └── assessment.md
-│               ├── <span class="cmd-candidate">maya-torres/</span>
-│               │   ├── brief.md
-│               │   └── assessment.md
-│               └── <span class="cmd-candidate">priya-deshmukh/</span>
-│                   └── brief.md
+│   └── example/AirCorp-ProductAnalyst/
+│
+└── <span class="cmd-dir">team-kit/</span>                ← Multiple interviewers
+    ├── <span class="cmd-file">SKILL.md</span>
+    └── example/AirCorp-ProductAnalyst/
+        ├── <span class="cmd-file">_team.md</span>
+        └── candidates/
+            └── <span class="cmd-candidate">maya-torres/</span>
+                ├── <span class="cmd-candidate">sarah-chen/</span>
+                │   ├── brief.md
+                │   └── assessment.md
+                ├── <span class="cmd-candidate">marcus-lee/</span>
+                │   └── brief.md
+                └── <span class="cmd-candidate">aisha-patel/</span>
+                    └── brief.md
         </div>
       </div>
     </div>
