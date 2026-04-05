@@ -57,13 +57,13 @@
   .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 20px; }
   .summary-card { background: var(--doc-card-bg); border: 1px solid var(--doc-card-border); border-radius: var(--radius); padding: 16px; border-top: 3px solid var(--card-color); }
   .card-name { font-size: 15px; font-weight: 700; color: var(--card-color); margin-bottom: 10px; }
-  .scores-row { display: flex; gap: 16px; margin-bottom: 10px; }
-  .scores-row > div { flex: 1; }
-  .score-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--doc-text-muted); margin-bottom: 2px; }
-  .score-value { font-size: 22px; font-weight: 700; color: var(--doc-text-heading); }
+  .scores-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+  .scores-row > div { min-width: 0; }
+  .score-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--doc-text-muted); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .score-value { font-size: 22px; font-weight: 700; color: var(--doc-text-heading); line-height: 1; }
   .score-value span { font-size: 12px; font-weight: 400; color: var(--doc-text-muted); }
-  .card-summary { font-size: 12px; color: var(--doc-text-muted); line-height: 1.5; border-top: 1px solid var(--doc-border); padding-top: 8px; }
-  .card-status { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; }
+  .card-summary { font-size: 12px; color: var(--doc-text-muted); line-height: 1.5; border-top: 1px solid var(--doc-border); padding-top: 10px; min-height: 64px; }
+  .card-status { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; }
   .status-assessed { background: var(--doc-green-subtle); color: var(--doc-green); }
   .status-partial { background: var(--doc-amber-subtle); color: var(--doc-amber); }
   .status-pending { background: rgba(59,130,246,0.1); color: #3b82f6; }
@@ -84,19 +84,19 @@
   /* ── Detail Breakdown ────────────────── */
   .bd-section { background: var(--doc-card-bg); border: 1px solid var(--doc-card-border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
   .bd-section h4 { font-size: 13px; font-weight: 700; color: var(--doc-text-heading); margin-bottom: 12px; }
-  .bd-head { display: flex; padding: 8px 0; border-bottom: 2px solid var(--doc-border); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--doc-text-muted); }
-  .col-name { flex: 0 0 200px; }
-  .col-scores { flex: 1; display: flex; gap: 8px; }
-  .col-scores > div { flex: 1; text-align: center; }
-  .col-expand { flex: 0 0 30px; text-align: center; cursor: pointer; color: var(--doc-text-muted); user-select: none; }
+  .bd-head { display: flex; align-items: flex-end; gap: 10px; padding: 8px 0; border-bottom: 2px solid var(--doc-border); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--doc-text-muted); }
+  .col-name { flex: 0 0 200px; min-width: 0; }
+  .col-scores { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; min-width: 0; }
+  .col-scores > div { text-align: center; min-width: 0; }
+  .col-expand { flex: 0 0 30px; text-align: center; cursor: pointer; color: var(--doc-text-muted); user-select: none; line-height: 1; }
   .bd-row { border-bottom: 1px solid var(--doc-border); }
   .bd-row:last-child { border-bottom: none; }
-  .bd-row-main { display: flex; align-items: center; padding: 10px 0; cursor: pointer; }
+  .bd-row-main { display: flex; align-items: center; gap: 10px; padding: 12px 0; cursor: pointer; }
   .bd-row-main:hover { background: #faf8f5; }
   .bd-evidence { display: none; padding: 8px 0 12px 16px; }
   .bd-row.open .bd-evidence { display: block; }
   .bd-row.open .col-expand { transform: rotate(45deg); }
-  .sc { display: flex; align-items: center; gap: 6px; }
+  .sc { display: flex; align-items: center; gap: 6px; min-width: 0; }
   .sc-track { flex: 1; height: 6px; background: #e8e5e0; border-radius: 3px; overflow: hidden; }
   .sc-fill { height: 100%; border-radius: 3px; transition: width 300ms; }
   .sc-num { font-size: 12px; font-weight: 600; min-width: 28px; text-align: right; color: var(--doc-text-heading); }
@@ -228,7 +228,9 @@ function renderSummaryCards() {
     const qlA = getQlAvg(c);
     const comb = nIv > 0 && qlA > 0 ? (jdA + qlA) / 2 : jdA;
     const summaries = getActiveSummaries(c);
-    const summaryHtml = summaries.length > 0 ? summaries[0].impression : (c.snapshot || 'No assessment data yet.');
+    const summaryHtml = summaries.length > 0
+      ? summaries.map(s => `<strong style="color:${s.interviewer.color}">${s.interviewer.name}:</strong> ${s.impression}`).join('<br><br>')
+      : (c.snapshot || 'No assessment data yet.');
     const statusClass = `status-${c.status}`;
     const statusLabel = c.status === "assessed" ? "Assessed" : c.status === "partial" ? "Partial" : c.status === "pending" ? "Pending" : "Not Started";
     return `<div class="summary-card" style="--card-color:${c.color}">
@@ -273,7 +275,9 @@ function renderRadar() {
   if (sel.length === 0) { wrap.innerHTML = '<div class="no-selection">Select candidates to view radar chart.</div>'; return; }
 
   const dims = DATA.competencyDimensions.length > 0 ? DATA.competencyDimensions : sel[0].jdCompetencies.map(c => c.dim);
-  const w = 480, h = 480, cx = w/2, cy = h/2, maxR = 140, sides = dims.length;
+  const wrapWidth = wrap.clientWidth || 480;
+  const w = Math.max(320, Math.min(520, wrapWidth));
+  const h = w, cx = w/2, cy = h/2, maxR = Math.min(150, w * 0.29), sides = dims.length;
   if (sides === 0) { wrap.innerHTML = '<div class="no-selection">No competency dimensions available.</div>'; return; }
   const slice = (Math.PI * 2) / sides;
   const r = s => (s / 5) * maxR;
@@ -284,9 +288,9 @@ function renderRadar() {
     const a = slice * i - Math.PI / 2;
     const x = cx + maxR * Math.cos(a), y = cy + maxR * Math.sin(a);
     svg += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#d1cdc6" stroke-width="0.75"/>`;
-    const lr = maxR + 30;
+    const lr = maxR + 22;
     const lx = cx + lr * Math.cos(a), ly = cy + lr * Math.sin(a);
-    const shortDim = dim.length > 20 ? dim.substring(0, 18) + '…' : dim;
+    const shortDim = dim.length > 18 ? dim.substring(0, 16) + '…' : dim;
     svg += `<text x="${lx}" y="${ly}" text-anchor="middle" dy="0.3em" font-size="10" fill="#6b7280" font-family="Inter,sans-serif">${shortDim}</text>`;
   });
   sel.forEach(c => {
@@ -388,7 +392,7 @@ document.addEventListener('DOMContentLoaded', init);
   <!-- Radar Chart -->
   <div class="radar-section">
     <h3>JD Competency Radar (Resume Analysis)</h3>
-    <div id="radarWrap"></div>
+    <div id="radarWrap" style="display:flex;justify-content:center;overflow-x:auto;"></div>
   </div>
 
   <!-- Detailed Breakdown -->
