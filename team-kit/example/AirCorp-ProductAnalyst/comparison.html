@@ -33,29 +33,42 @@
   .panel { background: var(--doc-card-bg); border: 1px solid var(--doc-card-border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
   .panel-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--doc-text-muted); margin-bottom: 10px; }
   .panel-hint { font-size: 11px; color: var(--doc-text-muted); margin-top: 8px; }
+  .panel.panel-interviewers { background: linear-gradient(180deg, #eff6ff 0%, #f8fbff 100%); border-color: #c7d2fe; box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); }
+  .panel.panel-interviewers .panel-label { color: #475569; }
+  .panel.panel-candidates { background: linear-gradient(180deg, #fffaf4 0%, #ffffff 100%); border-color: #f1ddd0; }
+  .panel.panel-candidates .panel-label { color: #7c5c47; }
   /* ── Interviewer Pills ───────────────── */
   .iv-pills { display: flex; flex-wrap: wrap; gap: 8px; }
-  .iv-pill { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; border: 2px solid transparent; cursor: pointer; font-size: 12px; transition: all 150ms; background: var(--doc-score-bg); }
-  .iv-pill.active { border-color: var(--pill-color); background: color-mix(in srgb, var(--pill-color) 8%, white); }
-  .iv-pill.locked { cursor: default; border-color: #94a3b8; background: #f1f5f9; opacity: 0.85; }
-  .iv-pill .swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--pill-color); flex-shrink: 0; }
-  .iv-pill .pill-name { font-weight: 600; color: var(--doc-text-heading); }
+  .iv-pill { display: flex; align-items: center; gap: 8px; padding: 5px 11px; border-radius: 999px; border: 1px solid #d7deee; cursor: pointer; font-size: 12px; transition: all 150ms; background: rgba(255,255,255,0.9); box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset; }
+  .iv-pill.active { border-color: var(--pill-color); background: color-mix(in srgb, var(--pill-color) 14%, white); box-shadow: 0 0 0 1px color-mix(in srgb, var(--pill-color) 12%, transparent); }
+  .iv-pill.locked { cursor: default; border-color: #cbd5e1; background: #f8fafc; opacity: 0.9; }
+  .iv-pill .swatch { width: 9px; height: 9px; border-radius: 999px; background: var(--pill-color); flex-shrink: 0; }
+  .iv-pill .pill-name { font-weight: 700; color: var(--doc-text-heading); }
   .iv-pill .pill-title { color: var(--doc-text-muted); font-size: 11px; }
-  .iv-pill .pill-role { font-size: 10px; font-weight: 600; color: var(--accent); background: var(--accent-subtle); padding: 1px 6px; border-radius: 10px; }
+  .iv-pill .pill-role { font-size: 10px; font-weight: 700; color: #1d4ed8; background: #dbeafe; padding: 1px 6px; border-radius: 999px; }
   .iv-pill .pill-lock { font-size: 10px; color: #64748b; }
   /* ── Candidate Toggles ───────────────── */
-  .cand-toggles { display: flex; flex-wrap: wrap; gap: 8px; }
-  .cand-toggle { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius); border: 2px solid transparent; cursor: pointer; font-size: 12px; transition: all 150ms; background: var(--doc-score-bg); min-width: 160px; }
-  .cand-toggle.active { border-color: var(--cand-color); background: color-mix(in srgb, var(--cand-color) 6%, white); }
-  .cand-toggle.disabled { opacity: 0.4; cursor: not-allowed; }
-  .cand-toggle .swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--cand-color); flex-shrink: 0; }
-  .cand-toggle .toggle-name { font-weight: 600; color: var(--doc-text-heading); }
-  .cand-toggle .toggle-status { font-size: 11px; color: var(--doc-text-muted); }
+  .cand-toggles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+  .cand-toggle { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 14px; border: 1px solid #eadccc; cursor: pointer; font-size: 12px; transition: all 150ms; background: linear-gradient(180deg, #ffffff 0%, #fff9f4 100%); min-height: 62px; }
+  .cand-toggle.active { border-color: var(--cand-color); background: color-mix(in srgb, var(--cand-color) 8%, white); box-shadow: 0 0 0 1px color-mix(in srgb, var(--cand-color) 10%, transparent); }
+  .cand-toggle.disabled { opacity: 0.45; cursor: not-allowed; }
+  .cand-toggle .swatch { width: 12px; height: 12px; border-radius: 4px; background: var(--cand-color); flex-shrink: 0; margin-top: 2px; }
+  .cand-toggle .toggle-name { font-weight: 700; color: var(--doc-text-heading); }
+  .cand-toggle .toggle-status { font-size: 11px; color: var(--doc-text-muted); margin-top: 2px; }
   .toggle-warning { display: none; font-size: 11px; color: var(--doc-amber); margin-top: 6px; }
   .count-label { font-size: 12px; color: var(--doc-text-muted); margin-bottom: 12px; }
   /* ── Summary Cards ───────────────────── */
   .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 20px; }
   .summary-card { background: var(--doc-card-bg); border: 1px solid var(--doc-card-border); border-radius: var(--radius); padding: 16px; border-top: 3px solid var(--card-color); }
+  .ranking-hero { position: sticky; top: 12px; z-index: 15; background: linear-gradient(180deg, #ffffff 0%, #fffaf4 100%); border: 2px solid #d6b89f; border-radius: 18px; padding: 16px 18px; margin-bottom: 18px; box-shadow: 0 12px 28px rgba(124, 92, 71, 0.10); }
+  .ranking-hero .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #8a5a3a; margin-bottom: 8px; }
+  .ranking-hero .eyebrow::before { content: ''; width: 10px; height: 10px; border-radius: 999px; background: #c75c2a; box-shadow: 0 0 0 4px rgba(199,92,42,0.14); }
+  .ranking-hero h3 { font-size: 15px; font-weight: 800; color: #3f2e24; margin-bottom: 6px; }
+  .ranking-hero p { font-size: 12px; color: #6f584a; line-height: 1.5; max-width: 72ch; }
+  .ranking-hero .ranking-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .ranking-hero .meta-chip { font-size: 11px; font-weight: 700; color: #7c5c47; background: #f7eadf; border: 1px solid #ebd4c1; padding: 4px 8px; border-radius: 999px; }
+  .ranking-bar { background: var(--doc-card-bg); border: 1px solid var(--doc-card-border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px; display: none; }
+  .ranking-bar h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--doc-text-muted); margin-bottom: 10px; }
   .card-name { font-size: 15px; font-weight: 700; color: var(--card-color); margin-bottom: 10px; }
   .scores-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
   .scores-row > div { min-width: 0; }
@@ -119,7 +132,7 @@ const DATA = {
   "role": "Product Analyst — Platform Modernization",
   "title": "Product Analyst — Platform Modernization — Team Candidate Comparison",
   "hiringManager": "Jordan Blake",
-  "generatedAt": "2026-04-05T20:06:00.911Z",
+  "generatedAt": "2026-04-05T20:46:10.671Z",
   "interviewers": [
     {
       "id": "jordan-blake",
@@ -860,15 +873,24 @@ function toggleCandidate(slug) {
   render();
 }
 
-function renderSummaryCards() {
+function getRankedCandidates() {
   const nIv = activeInterviewers.length;
-  const qlLabel = nIv > 0 ? `QL (${nIv} interviewer${nIv !== 1 ? 's' : ''})` : 'QL (none)';
-  document.getElementById("summaryCards").innerHTML = selected.map(slug => {
+  return selected.map(slug => {
     const c = DATA.candidates.find(x => x.slug === slug);
-    if (!c) return '';
+    if (!c) return null;
     const jdA = c.jdScore || 0;
     const qlA = getQlAvg(c);
     const comb = nIv > 0 && qlA > 0 ? (jdA + qlA) / 2 : jdA;
+    return { c, jdA, qlA, comb };
+  }).filter(Boolean).sort((a, b) => b.comb - a.comb);
+}
+
+function renderSummaryCards() {
+  const nIv = activeInterviewers.length;
+  const qlLabel = nIv > 0 ? `QL (${nIv} interviewer${nIv !== 1 ? 's' : ''})` : 'QL (none)';
+  document.getElementById("summaryCards").innerHTML = getRankedCandidates().map((item, idx) => {
+    const c = item.c;
+    const rank = idx + 1;
     const summaries = getActiveSummaries(c);
     const summaryHtml = summaries.length > 0
       ? summaries.map(s => `<strong style="color:${s.interviewer.color}">${s.interviewer.name}:</strong> ${s.impression}`).join('<br><br>')
@@ -876,12 +898,12 @@ function renderSummaryCards() {
     const statusClass = `status-${c.status}`;
     const statusLabel = c.status === "assessed" ? "Assessed" : c.status === "partial" ? "Partial" : c.status === "pending" ? "Pending" : "Not Started";
     return `<div class="summary-card" style="--card-color:${c.color}">
-      <span class="card-status ${statusClass}">${statusLabel}</span>
-      <div class="card-name">${c.name}</div>
+      <span class="card-status ${statusClass}">#${rank} · ${statusLabel}</span>
+      <div class="card-name">${rank}. ${c.name}</div>
       <div class="scores-row">
-        <div><div class="score-label">JD Competency</div><div class="score-value">${jdA.toFixed(1)}<span>/5</span></div></div>
-        <div><div class="score-label">${qlLabel}</div><div class="score-value">${nIv > 0 && qlA > 0 ? qlA.toFixed(1) : '—'}<span>${nIv > 0 && qlA > 0 ? '/5' : ''}</span></div></div>
-        <div><div class="score-label">Combined</div><div class="score-value">${comb.toFixed(1)}<span>/5</span></div></div>
+        <div><div class="score-label">JD Competency</div><div class="score-value">${item.jdA.toFixed(1)}<span>/5</span></div></div>
+        <div><div class="score-label">${qlLabel}</div><div class="score-value">${nIv > 0 && item.qlA > 0 ? item.qlA.toFixed(1) : '—'}<span>${nIv > 0 && item.qlA > 0 ? '/5' : ''}</span></div></div>
+        <div><div class="score-label">Combined</div><div class="score-value">${item.comb.toFixed(1)}<span>/5</span></div></div>
       </div>
       <div class="card-summary">${summaryHtml}</div>
     </div>`;
@@ -890,21 +912,22 @@ function renderSummaryCards() {
 
 function renderRanking() {
   const bar = document.getElementById("rankingBar");
-  if (selected.length < 2) { bar.style.display = "none"; return; }
+  const heroMeta = document.getElementById("rankingMeta");
+  heroMeta.innerHTML = [];
+  if (selected.length < 2) { bar.style.display = "none"; heroMeta.innerHTML = `<span class="meta-chip">Select 2+ candidates to enable ranking</span>`; return; }
   bar.style.display = "block";
   const nIv = activeInterviewers.length;
-  const data = selected.map(slug => {
-    const c = DATA.candidates.find(x => x.slug === slug);
-    const jdA = c.jdScore || 0;
-    const qlA = getQlAvg(c);
-    const comb = nIv > 0 && qlA > 0 ? (jdA + qlA) / 2 : jdA;
-    return { c, jdA, qlA, comb };
-  }).sort((a, b) => b.comb - a.comb);
+  const data = getRankedCandidates();
+  heroMeta.innerHTML = [
+    `<span class="meta-chip">Sorted by combined score</span>`,
+    `<span class="meta-chip">${nIv} interviewer${nIv !== 1 ? 's' : ''} active</span>`,
+    `<span class="meta-chip">Top rank = strongest current fit</span>`,
+  ].join('');
   document.getElementById("rankingEntries").innerHTML = data.map((d, i) => `
     <div class="ranking-entry">
-      <div class="ranking-pos ${i === 0 ? 'gold' : ''}">${i + 1}</div>
+      <div class="ranking-pos ${i === 0 ? 'gold' : ''}">#${i + 1}</div>
       <div>
-        <div class="ranking-name" style="color:${d.c.color}">${d.c.name}</div>
+        <div class="ranking-name" style="color:${d.c.color}">${i + 1}. ${d.c.name}</div>
         <div class="ranking-score">Combined: ${d.comb.toFixed(2)} · JD: ${d.jdA.toFixed(2)} · QL (${nIv}): ${d.qlA > 0 ? d.qlA.toFixed(2) : '—'}</div>
       </div>
     </div>
@@ -913,7 +936,7 @@ function renderRanking() {
 
 function renderRadar() {
   const wrap = document.getElementById("radarWrap");
-  const sel = selected.map(s => DATA.candidates.find(c => c.slug === s)).filter(c => c && c.jdCompetencies.length > 0);
+  const sel = getRankedCandidates().map(r => r.c).filter(c => c && c.jdCompetencies.length > 0);
   if (sel.length === 0) { wrap.innerHTML = '<div class="no-selection">Select candidates to view radar chart.</div>'; return; }
 
   const dims = DATA.competencyDimensions.length > 0 ? DATA.competencyDimensions : sel[0].jdCompetencies.map(c => c.dim);
@@ -935,11 +958,12 @@ function renderRadar() {
     const shortDim = dim.length > 18 ? dim.substring(0, 16) + '…' : dim;
     svg += `<text x="${lx}" y="${ly}" text-anchor="middle" dy="0.3em" font-size="10" fill="#6b7280" font-family="Inter,sans-serif">${shortDim}</text>`;
   });
-  sel.forEach(c => {
+  sel.forEach((c, index) => {
     const scores = dims.map(dim => { const e = c.jdCompetencies.find(j => j.dim === dim); return e ? e.score : 0; });
     let pts = scores.map((s, i) => { const a = slice * i - Math.PI / 2; const rv = r(s); return `${cx + rv * Math.cos(a)},${cy + rv * Math.sin(a)}`; }).join(" ");
     svg += `<polygon points="${pts}" fill="${c.color}" stroke="${c.color}" stroke-width="2" fill-opacity="0.25" stroke-opacity="0.8"/>`;
     scores.forEach((s, i) => { const a = slice * i - Math.PI / 2; const rv = r(s); svg += `<circle cx="${cx + rv * Math.cos(a)}" cy="${cy + rv * Math.sin(a)}" r="3" fill="${c.color}" stroke="#f0ede8" stroke-width="1.5"/>`; });
+    svg += `<text x="16" y="${22 + index * 18}" font-size="11" font-weight="700" fill="${c.color}" font-family="Inter,sans-serif">#${index + 1} ${c.name}</text>`;
   });
   svg += '</svg>';
   wrap.innerHTML = svg;
@@ -947,18 +971,18 @@ function renderRadar() {
 
 function renderDetail() {
   const wrap = document.getElementById("detailWrap");
-  const sel = selected.map(s => DATA.candidates.find(c => c.slug === s)).filter(Boolean);
+  const sel = getRankedCandidates().map(r => r.c).filter(Boolean);
   if (sel.length === 0) { wrap.innerHTML = '<div class="no-selection">Select candidates to view detailed breakdown.</div>'; return; }
 
   let html = '';
   // JD Competencies
   const dims = DATA.competencyDimensions.length > 0 ? DATA.competencyDimensions : (sel[0].jdCompetencies || []).map(c => c.dim);
-  html += `<div class="bd-section"><h4>JD Competencies (Resume Analysis)</h4><div class="bd-head"><div class="col-name">Dimension</div><div class="col-scores">${sel.map(c => `<div style="color:${c.color};font-weight:700">${c.name}</div>`).join('')}</div><div class="col-expand"></div></div>`;
+  html += `<div class="bd-section"><h4>JD Competencies (Resume Analysis)</h4><div class="bd-head"><div class="col-name">Dimension</div><div class="col-scores">${sel.map((c, idx) => `<div style="color:${c.color};font-weight:700">#${idx + 1} ${c.name}</div>`).join('')}</div><div class="col-expand"></div></div>`;
   dims.forEach(dim => {
-    html += `<div class="bd-row"><div class="bd-row-main"><div class="col-name">${dim}</div><div class="col-scores">${sel.map(c => {
+    html += `<div class="bd-row"><div class="bd-row-main"><div class="col-name">${dim}</div><div class="col-scores">${sel.map((c, idx) => {
       const e = c.jdCompetencies.find(j => j.dim === dim);
       const s = e ? e.score : 0; const p = (s / 5) * 100;
-      return `<div class="sc"><div class="sc-track"><div class="sc-fill" style="width:${p}%;background:${c.color}"></div></div><div class="sc-num">${s.toFixed(1)}</div></div>`;
+      return `<div class="sc"><div class="sc-track"><div class="sc-fill" style="width:${p}%;background:${c.color}"></div></div><div class="sc-num">#${idx + 1} ${s.toFixed(1)}</div></div>`;
     }).join('')}</div><div class="col-expand">+</div></div>`;
     html += `<div class="bd-evidence">${sel.map(c => {
       const e = c.jdCompetencies.find(j => j.dim === dim);
@@ -969,13 +993,13 @@ function renderDetail() {
 
   // Qualitative Dimensions
   const nIv = activeInterviewers.length;
-  html += `<div class="bd-section"><h4>Qualitative Dimensions (${nIv} Interviewer${nIv !== 1 ? 's' : ''} Active)</h4><div class="bd-head"><div class="col-name">Dimension</div><div class="col-scores">${sel.map(c => `<div style="color:${c.color};font-weight:700">${c.name}</div>`).join('')}</div><div class="col-expand"></div></div>`;
+  html += `<div class="bd-section"><h4>Qualitative Dimensions (${nIv} Interviewer${nIv !== 1 ? 's' : ''} Active)</h4><div class="bd-head"><div class="col-name">Dimension</div><div class="col-scores">${sel.map((c, idx) => `<div style="color:${c.color};font-weight:700">#${idx + 1} ${c.name}</div>`).join('')}</div><div class="col-expand"></div></div>`;
   DATA.qualitativeDimensions.forEach(dim => {
-    html += `<div class="bd-row"><div class="bd-row-main"><div class="col-name">${dim}</div><div class="col-scores">${sel.map(c => {
+    html += `<div class="bd-row"><div class="bd-row-main"><div class="col-name">${dim}</div><div class="col-scores">${sel.map((c, idx) => {
       const qlScores = getQlScores(c);
-      const idx = DATA.qualitativeDimensions.indexOf(dim);
-      const s = qlScores[idx] || 0; const p = (s / 5) * 100;
-      return `<div class="sc"><div class="sc-track"><div class="sc-fill" style="width:${p}%;background:${c.color}"></div></div><div class="sc-num">${s > 0 ? s.toFixed(1) : '—'}</div></div>`;
+      const scoreIndex = DATA.qualitativeDimensions.indexOf(dim);
+      const s = qlScores[scoreIndex] || 0; const p = (s / 5) * 100;
+      return `<div class="sc"><div class="sc-track"><div class="sc-fill" style="width:${p}%;background:${c.color}"></div></div><div class="sc-num">#${idx + 1} ${s > 0 ? s.toFixed(1) : '—'}</div></div>`;
     }).join('')}</div><div class="col-expand">+</div></div>`;
     html += `<div class="bd-evidence">${sel.map(c => {
       let evHtml = '';
@@ -1008,28 +1032,36 @@ document.addEventListener('DOMContentLoaded', init);
 
 <div class="container">
   <!-- Interviewer Toggles -->
-  <div class="panel">
+  <div class="ranking-hero" id="rankingHero">
+    <div class="eyebrow">Dynamic ranking</div>
+    <h3>Candidate order updates as you toggle interviewers</h3>
+    <p>The ranking below is sorted by the current combined score. Add or remove interviewers to see how the order changes in real time.</p>
+    <div class="ranking-meta" id="rankingMeta"></div>
+  </div>
+
+  <!-- Interviewer Toggles -->
+  <div class="panel panel-interviewers">
     <div class="panel-label">Interviewers</div>
     <div class="iv-pills" id="ivToggles"></div>
     <div class="panel-hint">Toggle interviewers to see how qualitative scores change. Resume analysis is always included.</div>
   </div>
 
   <!-- Candidate Toggles -->
-  <div class="panel">
+  <div class="panel panel-candidates">
     <div class="panel-label">Candidates</div>
     <div id="candCount" class="count-label"></div>
     <div class="cand-toggles" id="candToggles"></div>
     <div class="toggle-warning" id="toggleWarning">Maximum 3 candidates for chart comparison. Deselect one to add another.</div>
   </div>
 
-  <!-- Summary Cards -->
-  <div class="summary-cards" id="summaryCards"></div>
-
   <!-- Ranking Bar -->
   <div class="ranking-bar" id="rankingBar">
     <h3>Ranking</h3>
     <div class="ranking-entries" id="rankingEntries"></div>
   </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards" id="summaryCards"></div>
 
   <!-- Radar Chart -->
   <div class="radar-section">
