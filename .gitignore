@@ -10,3 +10,7 @@ comparison-save.html
 
 # Planning docs (specs, build notes)
 _planning/
+
+team-kit/test-harness/
+
+team-kit/test-harness-coverage/
