@@ -9,6 +9,8 @@ The Candidate Interview Kit is an AI-powered workflow for hiring teams. It gives
 
 **The impermanence is the point.** This kit is bespoke for one role, one hiring cycle. It's not a platform. It has no login, no database, no ongoing subscription. When you've made your hire, delete the folder.
 
+**Landing page:** <a href="https://github.com/theProductPath/Candidate-Interview-Kit-site" target="_blank" rel="noopener noreferrer">Candidate-Interview-Kit-site</a>
+
 ---
 
 ## Two Versions
