@@ -23,7 +23,7 @@ The interviewer (or hiring manager working alone) uses the kit to:
 
 No shared infrastructure required. One folder, one person, one decision.
 
-### Team Kit *(coming soon)*
+### Team Kit
 Multiple interviewers. Same role. Coordinated assessments.
 
 Each interviewer gets personalized prep briefs based on their focus areas. Each submits independent assessments. The hiring manager sees all assessments in one comparison tool, with the ability to toggle each interviewer's input on and off.
