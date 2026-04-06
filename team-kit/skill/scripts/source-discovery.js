@@ -5,6 +5,7 @@ const { execFileSync } = require("child_process");
 const TEXT_EXTENSIONS = new Set([".md", ".markdown", ".txt"]);
 const DOC_EXTENSIONS = new Set([".pdf", ".docx", ".doc", ".rtf"]);
 const SUPPORTED_EXTENSIONS = new Set([...TEXT_EXTENSIONS, ...DOC_EXTENSIONS]);
+const RESUME_BASENAMES = ["resume", "cv"];
 
 const JOB_DESCRIPTION_BASENAMES = [
   "job-description", "job_description", "jd",
@@ -26,9 +27,31 @@ function discoverSources(kitRoot) {
     }))
     .filter((file) => SUPPORTED_EXTENSIONS.has(file.ext));
 
+  const candidatesRoot = path.join(kitRoot, "candidates");
+  const resumeFiles = [];
+  if (fs.existsSync(candidatesRoot)) {
+    for (const candidateEntry of fs.readdirSync(candidatesRoot, { withFileTypes: true })) {
+      if (!candidateEntry.isDirectory()) continue;
+      const candidateDir = path.join(candidatesRoot, candidateEntry.name);
+      for (const candidateFile of fs.readdirSync(candidateDir, { withFileTypes: true })) {
+        if (!candidateFile.isFile()) continue;
+        const ext = path.extname(candidateFile.name).toLowerCase();
+        const base = path.basename(candidateFile.name, path.extname(candidateFile.name)).toLowerCase();
+        if (!SUPPORTED_EXTENSIONS.has(ext)) continue;
+        resumeFiles.push({
+          name: candidateFile.name,
+          ext,
+          base,
+          fullPath: path.join(candidateDir, candidateFile.name),
+        });
+      }
+    }
+  }
+
   return {
     jobDescription: pickSource(files, JOB_DESCRIPTION_BASENAMES, ["job", "description", "jd"]),
     teamFile: pickSource(files, TEAM_FILE_BASENAMES, ["_team", "team"]),
+    resume: pickSource(resumeFiles, RESUME_BASENAMES, ["resume", "cv", "candidate"]),
   };
 }
 

@@ -31,17 +31,21 @@ if (fs.existsSync(newDir)) {
   process.exit(1);
 }
 
-// Rename the candidate folder (interviewer subfolders move with it)
+// Rename the candidate folder
 fs.renameSync(oldDir, newDir);
 
-// Update title lines in all brief.md and assessment.md files in interviewer subfolders
-const interviewerDirs = fs.readdirSync(newDir, { withFileTypes: true })
-  .filter((e) => e.isDirectory())
-  .map((e) => path.join(newDir, e.name));
+// Update title lines in flat brief/assessment files
+const files = fs.readdirSync(newDir, { withFileTypes: true })
+  .filter((e) => e.isFile())
+  .map((e) => e.name)
+  .filter((name) => /^brief-.+\.md$/i.test(name) || /^assessment-.+\.md$/i.test(name));
 
-for (const ivDir of interviewerDirs) {
-  updateFile(path.join(ivDir, "brief.md"), /^# Interview Prep Brief — .+$/m, `# Interview Prep Brief — ${newName}`);
-  updateFile(path.join(ivDir, "assessment.md"), /^# Interview Assessment — .+$/m, `# Interview Assessment — ${newName}`);
+for (const file of files) {
+  if (file.startsWith("brief-")) {
+    updateFile(path.join(newDir, file), /^# Interview Prep Brief — .+$/m, `# Interview Prep Brief — ${newName}`);
+  } else if (file.startsWith("assessment-")) {
+    updateFile(path.join(newDir, file), /^# Interview Assessment — .+$/m, `# Interview Assessment — ${newName}`);
+  }
 }
 
 console.log(`Renamed candidate folder from ${oldSlug} to ${newSlug}`);

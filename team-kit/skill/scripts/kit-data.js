@@ -178,7 +178,7 @@ function buildTeamKitData(kitRoot) {
   const hiringManager = team.hiringManager || extractLabeledValue(jdMarkdown, "Hiring Manager") || "";
 
   // Extract JD competency dimensions
-  const competencySection = extractSection(jdMarkdown, "Key Competencies");
+  const competencySection = extractSection(jdMarkdown, "Key Competencies") || extractSection(jdMarkdown, "Core Competencies");
   const competencyDimensions = competencySection
     ? competencySection.split("\n").map((l) => l.trim())
         .filter((l) => /^\d+\.\s+/.test(l)).map((l) => l.replace(/^\d+\.\s+/, "").trim())
@@ -204,9 +204,12 @@ function buildTeamKitData(kitRoot) {
     const candidateSlug = path.basename(candidateDir);
     const candidateName = candidateSlug.split("-").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
 
-    // Discover interviewer subfolders
-    const interviewerDirs = fs.readdirSync(candidateDir, { withFileTypes: true })
-      .filter((e) => e.isDirectory()).map((e) => e.name).sort();
+    const files = fs.readdirSync(candidateDir, { withFileTypes: true })
+      .filter((e) => e.isFile())
+      .map((e) => e.name);
+
+    const briefFiles = files.filter((f) => /^brief-.+\.md$/i.test(f)).sort();
+    const assessmentFiles = files.filter((f) => /^assessment-.+\.md$/i.test(f)).sort();
 
     // Get JD scores from first available brief
     let jdScore = null;
@@ -217,38 +220,39 @@ function buildTeamKitData(kitRoot) {
     let briefCount = 0;
     let assessmentCount = 0;
 
-    for (const ivSlug of interviewerDirs) {
-      const briefPath = path.join(candidateDir, ivSlug, "brief.md");
-      const assessmentPath = path.join(candidateDir, ivSlug, "assessment.md");
-
+    for (const briefFile of briefFiles) {
+      const ivSlug = briefFile.replace(/^brief-/, "").replace(/\.md$/i, "");
+      const briefPath = path.join(candidateDir, briefFile);
       const briefMd = readFileIfExists(briefPath);
-      const assessmentMd = readFileIfExists(assessmentPath);
-
-      if (briefMd) {
-        briefCount++;
-        const brief = parseBrief(briefMd);
-        if (brief && jdCompetencies.length === 0) {
-          jdScore = brief.jdScore;
-          jdCompetencies = brief.jdCompetencies;
-          snapshot = brief.snapshot;
-        }
+      if (!briefMd) continue;
+      briefCount++;
+      const brief = parseBrief(briefMd);
+      if (brief && jdCompetencies.length === 0) {
+        jdScore = brief.jdScore;
+        jdCompetencies = brief.jdCompetencies;
+        snapshot = brief.snapshot;
       }
+      if (!assessments[ivSlug]) assessments[ivSlug] = {};
+    }
 
-      if (assessmentMd) {
-        assessmentCount++;
-        const assessment = parseAssessment(assessmentMd);
-        if (assessment) {
-          assessments[ivSlug] = {
-            date: assessment.date,
-            qualScore: assessment.qualScore,
-            qualDimensions: assessment.qualDimensions,
-            overallImpression: assessment.overallImpression,
-            strengths: assessment.strengths,
-            concerns: assessment.concerns,
-            recommendation: assessment.recommendation,
-            rationale: assessment.rationale,
-          };
-        }
+    for (const assessmentFile of assessmentFiles) {
+      const ivSlug = assessmentFile.replace(/^assessment-/, "").replace(/\.md$/i, "");
+      const assessmentPath = path.join(candidateDir, assessmentFile);
+      const assessmentMd = readFileIfExists(assessmentPath);
+      if (!assessmentMd) continue;
+      assessmentCount++;
+      const assessment = parseAssessment(assessmentMd);
+      if (assessment) {
+        assessments[ivSlug] = {
+          date: assessment.date,
+          qualScore: assessment.qualScore,
+          qualDimensions: assessment.qualDimensions,
+          overallImpression: assessment.overallImpression,
+          strengths: assessment.strengths,
+          concerns: assessment.concerns,
+          recommendation: assessment.recommendation,
+          rationale: assessment.rationale,
+        };
       }
     }
 
