@@ -9,7 +9,7 @@ The Candidate Interview Kit is an AI-powered workflow for hiring teams. It gives
 
 **The impermanence is the point.** This kit is bespoke for one role, one hiring cycle. It's not a platform. It has no login, no database, no ongoing subscription. When you've made your hire, delete the folder.
 
-**Landing page:** <a href="https://interview-kit.theproductpath.com/" target="_blank" rel="noopener noreferrer">Candidate-Interview-Kit-site</a>
+**Landing page:** <a href="https://interview-kit.theproductpath.com/" target="_blank" rel="noopener noreferrer">candidate-interview-kit-site</a>
 
 ---
 
@@ -75,7 +75,7 @@ The kit runs through three steps, in order, for each candidate:
 ## What's in This Folder
 
 ```
-Candidate-Interview-Kit/
+candidate-interview-kit/
 ├── README.md                   ← This file
 ├── individual-kit/             ← One interviewer, one role, full pipeline
 │   ├── SKILL.md                ← The AI skill (copy this to your kit folder)
